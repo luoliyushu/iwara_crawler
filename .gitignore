@@ -3,3 +3,7 @@ tmp_dir
 venv
 *.mp4
 token.json
+
+error_list.txt
+/downloads
+/#错误备份
