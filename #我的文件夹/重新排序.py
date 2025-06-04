@@ -1,8 +1,8 @@
 import os
 
-new_order_path = r"G:\CloneCode_1\iwara_crawler-master\#错误备份\视频列表_紳士枠.txt" # 新序号文件
-need_order_dir = r"G:\CloneCode_1\iwara_crawler-master\downloads\[搜索]紳士枠" # 需要重新排序的目录
-file_prefix = "紳士枠." # 文件前缀
+new_order_path = r"G:\CloneCode_1\iwara_crawler\#错误备份\视频列表_ハンド.txt" # 新序号文件
+need_order_dir = r"G:\CloneCode_1\iwara_crawler\downloads\[搜索]ハンド" # 需要重新排序的目录
+file_prefix = "ハンド." # 文件前缀
 
 def get_new_order_list(new_order_path)-> list[tuple[str, str]]:
     """ 获取新的序号 """
@@ -54,6 +54,6 @@ while count < total_count:
                     
                     print(f"{old_path}\n--->\n{new_path}\n\n")
                     os.rename(old_path, new_path)
-                    # need_order_list.remove(need_item)
+                    need_order_list = os.listdir(need_order_dir)
                     print("\n")
     print(f"运行次数：{count}")
