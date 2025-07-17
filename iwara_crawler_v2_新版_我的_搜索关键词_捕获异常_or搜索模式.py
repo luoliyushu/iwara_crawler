@@ -77,6 +77,8 @@ USER_INFO = [
     # {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
     # {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
     # {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
+    # {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
+    {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
     # # # -----------------------------------------------------------
     # # # 淫词艳曲
     # {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
@@ -90,7 +92,7 @@ USER_INFO = [
     # # # -----------------------------------------------------------
     # # # R18的很少
     # {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
-    # # # -----------------------------------------------------------
+    # # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
     {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": "標識|ero sign|sign strip|hentai sign"},
