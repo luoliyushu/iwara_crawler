@@ -399,9 +399,9 @@ def main(driver, headers, user_name, file_prefix, download_index,
         save_dir = os.path.join(base_dir, dir_user)
         os.makedirs(save_dir, exist_ok=True)
 
-        # 已存在则跳过
+        # 已存在则跳过：如果文件或同名 .lnk 快捷方式已存在
         dest_path = os.path.join(save_dir, filename)
-        if os.path.exists(dest_path):
+        if os.path.exists(dest_path) or os.path.exists(dest_path + ".lnk"):
             print(f"{idx:3d} 已存在，跳过")
             continue
 
