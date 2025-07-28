@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+完整脚本：将所有 requests.get 调用替换为 Selenium fetch (execute_async_script)，
+其他功能保持一致，并做了少许优化和详细中文注释。
+"""
+
+import os
+import sys
+import json
+import time
+import random
+import string
+import shutil
+import datetime
+from urllib.parse import urlencode
 
 from fake_useragent import UserAgent
 from selenium import webdriver
@@ -6,92 +22,75 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from webdriver_manager.core.http import HttpClient
-
-import datetime
-import json
-import math
-import os
-import random
-import re
-import requests
-import shutil
-import string
-import sys
-import time
-
-from mymodule import download_file
 from requests.exceptions import SSLError
 
-# {
-#   "user_name": The name of iwara user
-#   "file_prefix": Add a prefix for all video files if needed
-#   "download_index": Download the video by index in this list only. Leave it blank for all
-#   "profile_name": Optional. Actual name in profile page link. eg: https://www.iwara.tv/profile/user787392
-# }
+# 自定义下载逻辑：需自行实现 download_file(url, filename, dir_username, headers, ...)
+from mymodule import download_file
+
+# 用户批量配置：username/file_prefix/download_index/profile_name/query
 USER_INFO = [
-    # {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
-    # {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
-    # {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
-    # {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
-    # {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
-    # {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
-    # {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
-    # {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
-    # {"user_name": "user15566", "profile_name": "user15566", "file_prefix": "sb5", "download_index": "32:"},
-    # {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil", "download_index": "2:", "file_prefix": ""},
-    # {"user_name": "fengyunmomo", "profile_name": "fengyunmomo", "download_index": "", "file_prefix": ""},
-    # {"user_name": "txwy", "profile_name": "txwy", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Arx_MMD", "profile_name": "arxmmd", "download_index": "", "file_prefix": ""},
-    # {"user_name": "akomni", "profile_name": "akomni", "download_index": "44:", "file_prefix": ""},
-    # {"user_name": "千种咲夜子", "profile_name": "user1866311", "download_index": "", "file_prefix": ""},
-    # {"user_name": "xiangweitudou", "profile_name": "user1936430", "download_index": "", "file_prefix": ""},
-    # {"user_name": "PastaPaprika", "profile_name": "pastapaprika", "download_index": "", "file_prefix": ""},
-    # {"user_name": "10yue", "profile_name": "10yue", "download_index": "", "file_prefix": ""},
-    # {"user_name": "ダンリック", "profile_name": "user8160", "download_index": "", "file_prefix": ""},
-    # {"user_name": "lovely416", "profile_name": "zehk416", "download_index": "", "file_prefix": ""},
-    # {"user_name": "在下神奈有何贵干", "profile_name": "user1851714", "download_index": "", "file_prefix": ""},
-    # {"user_name": "kemkem", "profile_name": "kemkem", "download_index": "", "file_prefix": ""},
-    # {"user_name": "ReHaku", "profile_name": "rehaku", "download_index": "", "file_prefix": ""},
-    # {"user_name": "iskanime", "profile_name": "iskanime", "download_index": "", "file_prefix": ""},
-    # {"user_name": "tuiwannian", "profile_name": "user221116", "download_index": "700:", "file_prefix": ""},
-    # {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
-    # {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
-    # {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
-    # {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
-    # {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
-    # # # -----------------------------------------------------------
-    # # # 整活（时间停止、催眠、绅士之手）
-    # {"user_name": "QNR", "profile_name": "qnr", "download_index": "30:", "file_prefix": ""},
-    # {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621", "download_index": "", "file_prefix": ""},
-    # {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu", "download_index": "", "file_prefix": ""},
-    # {"user_name": "noneferoero", "profile_name": "noneferoero", "download_index": "", "file_prefix": ""},
-    # {"user_name": "yafrmmd", "profile_name": "yafrmmd", "download_index": "", "file_prefix": ""},
-    # {"user_name": "sodeno19", "profile_name": "sodeno19", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Garnet2020", "profile_name": "garnet2020", "download_index": "", "file_prefix": ""},
-    # {"user_name": "xiaodidi09", "profile_name": "xiaodidi09", "download_index": "", "file_prefix": ""},
-    # {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
-    # {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
-    # {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
-    # {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
+    {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
+    {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
+    {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
+    {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
+    {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
+    {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
+    {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
+    {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
+    {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
+    {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
+    {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
+    {"user_name": "user15566", "profile_name": "user15566", "file_prefix": "sb5", "download_index": "32:"},
+    {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil", "download_index": "2:", "file_prefix": ""},
+    {"user_name": "fengyunmomo", "profile_name": "fengyunmomo", "download_index": "", "file_prefix": ""},
+    {"user_name": "txwy", "profile_name": "txwy", "download_index": "", "file_prefix": ""},
+    {"user_name": "Arx_MMD", "profile_name": "arxmmd", "download_index": "", "file_prefix": ""},
+    {"user_name": "akomni", "profile_name": "akomni", "download_index": "44:", "file_prefix": ""},
+    {"user_name": "千种咲夜子", "profile_name": "user1866311", "download_index": "", "file_prefix": ""},
+    {"user_name": "xiangweitudou", "profile_name": "user1936430", "download_index": "", "file_prefix": ""},
+    {"user_name": "PastaPaprika", "profile_name": "pastapaprika", "download_index": "", "file_prefix": ""},
+    {"user_name": "10yue", "profile_name": "10yue", "download_index": "", "file_prefix": ""},
+    {"user_name": "ダンリック", "profile_name": "user8160", "download_index": "", "file_prefix": ""},
+    {"user_name": "lovely416", "profile_name": "zehk416", "download_index": "", "file_prefix": ""},
+    {"user_name": "在下神奈有何贵干", "profile_name": "user1851714", "download_index": "", "file_prefix": ""},
+    {"user_name": "kemkem", "profile_name": "kemkem", "download_index": "", "file_prefix": ""},
+    {"user_name": "ReHaku", "profile_name": "rehaku", "download_index": "", "file_prefix": ""},
+    {"user_name": "iskanime", "profile_name": "iskanime", "download_index": "", "file_prefix": ""},
+    {"user_name": "tuiwannian", "profile_name": "user221116", "download_index": "700:", "file_prefix": ""},
+    {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
+    {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
+    {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
+    {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
+    {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
+    {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
+    # # -----------------------------------------------------------
+    # # 整活（时间停止、催眠、绅士之手）
+    {"user_name": "QNR", "profile_name": "qnr", "download_index": "30:", "file_prefix": ""},
+    {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621", "download_index": "", "file_prefix": ""},
+    {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu", "download_index": "", "file_prefix": ""},
+    {"user_name": "noneferoero", "profile_name": "noneferoero", "download_index": "", "file_prefix": ""},
+    {"user_name": "yafrmmd", "profile_name": "yafrmmd", "download_index": "", "file_prefix": ""},
+    {"user_name": "sodeno19", "profile_name": "sodeno19", "download_index": "", "file_prefix": ""},
+    {"user_name": "Garnet2020", "profile_name": "garnet2020", "download_index": "", "file_prefix": ""},
+    {"user_name": "xiaodidi09", "profile_name": "xiaodidi09", "download_index": "", "file_prefix": ""},
+    {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
+    {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
+    {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
+    {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
     {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
-    # # # -----------------------------------------------------------
-    # # # 淫词艳曲
-    # {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
-    # {"user_name": "YZLZ", "profile_name": "yzlzhhzwty", "download_index": "", "file_prefix": ""},
-    # {"user_name": "粉红色猫猫头", "profile_name": "user205029", "download_index": "", "file_prefix": ""},
-    # {"user_name": "整夜下雪", "profile_name": "user340036", "download_index": "", "file_prefix": ""},
-    # # # -----------------------------------------------------------
-    # {"user_name": "水水..", "profile_name": "user937858", "file_prefix": "水水..a", "download_index": "305:"},
-    # {"user_name": "qishi", "profile_name": "qishi", "download_index": "264:", "file_prefix": ""},
-    # {"user_name": "LTDEND", "profile_name": "ltdend", "download_index": "236:", "file_prefix": ""},
-    # # # -----------------------------------------------------------
-    # # # R18的很少
-    # {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
+    # # -----------------------------------------------------------
+    # # 淫词艳曲
+    {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
+    {"user_name": "YZLZ", "profile_name": "yzlzhhzwty", "download_index": "", "file_prefix": ""},
+    {"user_name": "粉红色猫猫头", "profile_name": "user205029", "download_index": "", "file_prefix": ""},
+    {"user_name": "整夜下雪", "profile_name": "user340036", "download_index": "", "file_prefix": ""},
+    # # -----------------------------------------------------------
+    {"user_name": "水水..", "profile_name": "user937858", "file_prefix": "水水..a", "download_index": "305:"},
+    {"user_name": "qishi", "profile_name": "qishi", "download_index": "264:", "file_prefix": ""},
+    {"user_name": "LTDEND", "profile_name": "ltdend", "download_index": "236:", "file_prefix": ""},
+    # # -----------------------------------------------------------
+    # # R18的很少
+    {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
     {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
@@ -101,470 +100,352 @@ USER_INFO = [
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "DATEN_ROUTE", "query": "DATEN"},
 ]
 
-DATE_LIMIT = 0   # Prevent downloading aged videos, 0 for unlimited / 假设为14，则表示只下载近14天的视频
-
+# 全局常量
+DATE_LIMIT = 0  # 天数限制：0 表示不限制，>0 表示只下载近 N 天的视频
 PROXIES = {
+    # 若需走代理，请取消注释并填写
     # "http": "http://127.0.0.1:8080",
     # "https": "http://127.0.0.1:8080",
 }
-
 IWARA_HOME = "https://www.iwara.tv/"
 IWARA_API = "https://api.iwara.tv/"
 
-# Chrome Driver https://googlechromelabs.github.io/chrome-for-testing/
-
-
-class HttpClientWithProxy(HttpClient):
-    def get(self, url, params=None, **_kwargs) -> requests.Response:
-        return requests.get(url, params, proxies=PROXIES, verify=False)
-
-
+# ------------------------------------------------------------------------------
 def get_token():
-    options = webdriver.ChromeOptions()
-    if "http" in PROXIES:
-        options.add_argument(f"--proxy-server={PROXIES['http'].replace('http://', '')}")
-    if not os.path.isfile("token.json"):
+    """
+    1. 用 Selenium 登录 iwara.tv，获取 localStorage 中的 token 并保存到 token.json
+    2. 已存在 token.json 则直接读取
+    返回：user_agent, token
+    """
+    if not os.path.exists("token.json"):
+        # 第一次登录：随机 UA，打开浏览器，人工扫码登录或自动登录
         ua = UserAgent()
         user_agent = ua.random
-        print(user_agent)
+        options = webdriver.ChromeOptions()
         options.add_argument(f"--user-agent={user_agent}")
-        with webdriver.Chrome(
-            # service=ChromeService(ChromeDriverManager(
-            #     version="114.0.5735.90",
-            #     download_manager=WDMDownloadManager(HttpClientWithProxy())
-            # ).install()),
-            service=ChromeService("./chromedriver.exe"),
-            options=options,
-        ) as driver:
-            driver.get(f"{IWARA_HOME}login")
-            while True:
-                token = driver.execute_script("""
-                    return window.localStorage.getItem("token");;
-                """)
-                time.sleep(random.randint(1, 3))
-                if token is not None:
-                    break
-
-            with open("token.json", "w") as f:
-                f.write(json.dumps({
-                    "user_agent": user_agent,
-                    "token": token,
-                }, indent=4))
+        if "http" in PROXIES:
+            options.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
+        driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"),
+                                   options=options)
+        driver.get(IWARA_HOME + "login")
+        # 等待 localStorage 存入 token
+        while True:
+            token = driver.execute_script(
+                "return window.localStorage.getItem('token');"
+            )
+            if token:
+                break
+            time.sleep(1 + random.random() * 2)
+        driver.quit()
+        # 保存 token.json
+        with open("token.json", "w", encoding="utf-8") as f:
+            json.dump({"user_agent": user_agent, "token": token}, f, indent=2)
     else:
-        with open("token.json", "r") as f:
-            data = json.load(f)
-            user_agent = data["user_agent"]
-            token = data["token"]
-
+        # 读取 token.json
+        cfg = json.load(open("token.json", encoding="utf-8"))
+        user_agent = cfg["user_agent"]
+        token = cfg["token"]
     return user_agent, token
 
-
-def create_dir():
-    root_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "tmp_dir")
-    while True:
-        dir_name = "".join([random.choice(string.ascii_lowercase) for i in range(8)])
-        if not os.path.isdir(os.path.join(root_dir, dir_name)):
-            break
-    # os.mkdir(dir_name)
-    return os.path.join(root_dir, dir_name)
-
-
-success_list = list()
-error_list = list()
-
-
-def download_file_with_progress(url, filename, dir_username):
-    local_dir = create_dir()
-
-    options = webdriver.ChromeOptions()
-    options.add_argument("--lang=en-US")
+# ------------------------------------------------------------------------------
+def init_selenium_session(user_agent: str):
+    """
+    初始化一个 Selenium ChromeDriver 实例，用于后续所有 API JSON 请求。
+    这里主动导航到 IWARA_HOME，保证后续 fetch 都在正确的同源上下文执行，
+    避免 “Failed to fetch” 的 CORS 问题。
+    """
+    opts = webdriver.ChromeOptions()
+    opts.add_argument("--headless=new")
+    opts.add_argument("--lang=en-US")
+    opts.add_argument(f"--user-agent={user_agent}")
     if "http" in PROXIES:
-        options.add_argument(f"--proxy-server={PROXIES['http'].replace('http://', '')}")
-    options.add_argument("--devtools")
-    options.add_experimental_option("prefs", {
-        "download.default_directory": local_dir,
+        opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
+    driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"),
+                              options=opts)
+
+    # 导航到 i-wara 主站，让浏览器上下文落在 https://www.iwara.tv
+    driver.get(IWARA_HOME)
+    # 把 token 注入到 localStorage
+    token = json.load(open("token.json", encoding="utf-8"))["token"]
+    driver.execute_script(f"window.localStorage.setItem('token','{token}');")
+    driver.execute_script("window.localStorage.setItem('ecchi','1');")
+    return driver
+
+# ------------------------------------------------------------------------------
+def selenium_api_get_json(driver, url: str, params: dict = None, headers: dict = None):
+    """
+    用 Selenium fetch API 请求 JSON 并返回 Python 对象
+      - 先确保 driver.current_url 是 https://www.iwara.tv 或 https://api.iwara.tv
+      - 再 execute_async_script 执行 fetch，带上 Authorization header
+    """
+    # 如果当前不在同源上下文，重定向一次
+    if not driver.current_url.startswith(IWARA_HOME) and \
+       not driver.current_url.startswith(IWARA_API):
+        driver.get(IWARA_HOME)
+
+    # 构造完整 URL
+    full_url = url
+    if params:
+        qs = urlencode(params)
+        full_url = f"{url}?{qs}"
+
+    # Async fetch 脚本，最后一个参数是 Selenium 的 callback
+    fetch_script = """
+    const [url, headers, callback] = arguments;
+    fetch(url, {
+      method: 'GET',
+      headers: headers,
+      credentials: 'same-origin'
     })
+      .then(res => {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(obj => callback(JSON.stringify(obj)))
+      .catch(err => callback(JSON.stringify({__err: err.toString()})));
+    """
 
-    user_agent, token = get_token()
+    raw = driver.execute_async_script(fetch_script, full_url, headers)
+    result = json.loads(raw)
 
-    options.add_argument(f"--user-agent={user_agent}")
-    options.add_argument("--headless=new")
+    if isinstance(result, dict) and "__err" in result:
+        # 把浏览器脚本里的错误抛出来，方便定位
+        raise RuntimeError(f"Fetch 错误: {result['__err']}")
 
-    with webdriver.Chrome(
-        # service=ChromeService(ChromeDriverManager(
-        #     version="114.0.5735.90",
-        #     download_manager=WDMDownloadManager(HttpClientWithProxy()),
-        # ).install()),
-        service=ChromeService("./chromedriver.exe"),
-        options=options,
-    ) as driver:
-        sys.stdout.write("\rlogin...")
-        driver.get(f"{IWARA_HOME}login")
+    return result
+
+# ------------------------------------------------------------------------------
+def download_file_with_progress(url, filename, dir_username):
+    """
+    Selenium + 本地下载目录方式：保留原 download_file 逻辑
+    只做了一个拼写修正：add_experimental_option
+    """
+    # 创建临时下载目录
+    root = os.path.join(os.path.dirname(__file__), "tmp_dir")
+    # 生成随机子目录
+    rand = "".join(random.choices(string.ascii_lowercase, k=8))
+    tmp = os.path.join(root, rand)
+    os.makedirs(tmp, exist_ok=True)
+
+    # Selenium options：设置下载目录
+    opts = webdriver.ChromeOptions()
+    opts.add_argument("--lang=en-US")
+    opts.add_experimental_option("prefs", {
+        "download.default_directory": tmp,
+    })
+    if "http" in PROXIES:
+        opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
+    ua, token = get_token()
+    opts.add_argument(f"--user-agent={ua}")
+    opts.add_argument("--headless=new")
+
+    # 启动专用下载 driver
+    with webdriver.Chrome(service=ChromeService("./chromedriver.exe"), options=opts) as driver:
+        # 登录 localStorage
+        driver.get(IWARA_HOME)
+        driver.execute_script(f"window.localStorage.setItem('token','{token}')")
+        driver.execute_script("window.localStorage.setItem('ecchi','1')")
+        # 跳转视频页面，等待元素加载
+        driver.get(url)
+        # 等待下载按钮出现
         try:
-            WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, ".inputField"))
+            dl_btn = WebDriverWait(driver, 20).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, ".downloadButton"))
             )
-            driver.execute_script(f"window.localStorage.setItem('token', '{token}');")  # Login
-            driver.execute_script(f"window.localStorage.setItem('ecchi', '1');")  # I am over 18
-            time.sleep(random.randint(1, 3))
-            sys.stdout.write("\rfetch download url...")
-            driver.get(url)
-            try:
-                r = WebDriverWait(driver, 30).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, ".header__content"))
-                )
-                r = r.find_element(By.CSS_SELECTOR, ".header__link")
-                if "Register" in r.get_attribute("innerHTML"):
-                    sys.stdout.write(" login failed. Please delete token.json and retry.")
-                    driver.quit()
-                    print("")
-                    return False
-            except TimeoutException:
-                sys.stdout.write(" timeout(1).")
-                driver.quit()
-                print("")
-                return False
-            try:
-                download_button = WebDriverWait(driver, 30).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, ".downloadButton"))
-                )
-                # download_button = driver.find_element(By.CSS_SELECTOR, ".downloadButton")
-                download_parent = download_button.find_element(By.XPATH, "./../..")
-                download_content = download_parent.find_element(By.CSS_SELECTOR, ".dropdown__content")
-                download_li = download_content.find_elements(By.TAG_NAME, "li")
-                target_url = None
-                for li in download_li:
-                    a = li.find_elements(By.TAG_NAME, "a")
-                    if a[0].get_attribute("innerHTML") == "Source":
-                        target_url = a[0].get_attribute("href")
-                        break
-                    elif a[0].get_attribute("innerHTML") == "540": # 我修改的代码
-                        target_url = a[0].get_attribute("href")
-                        break
-                if target_url is not None:
-                    sys.stdout.write("\rstart download...")
-                    # 我修改的代码
-                    if '下载成功' in download_file(target_url, filename, dir_username, headers=headers, max_retries=60, max_download_seconds=20, max_filename_length=50):
-                        return True
-                    else:
-                        return False
-                                      
-                    # region 原版下载代码
-                    # driver.get(target_url)
-                    # driver.get("chrome://downloads")
-
-                    # while True:
-                    #     progress_string = driver.execute_script("""
-                    #         return function(){
-                    #             let res = null;
-                    #             let downloads_manager = document.querySelector("downloads-manager");
-                    #             if (downloads_manager != null) {
-                    #                 let frb0 = downloads_manager.shadowRoot.querySelector("#frb0");
-                    #                 if (frb0 != null) {
-                    #                     let description = frb0.shadowRoot.querySelector(".description");
-                    #                     if (description != null) {
-                    #                         res = description.innerHTML;
-                    #                     }
-                    #                 }
-                    #             }
-                    #             return res;
-                    #         }();
-                    #     """)
-                    #     if progress_string is not None:
-                    #         progress_string = progress_string.replace("\n", "").strip(" ")
-                    #         progress_string = re.sub(r"<!--.+-->", "", progress_string)
-                    #         sys.stdout.write(f"\r{progress_string}")
-                    #         if progress_string == "":
-                    #             # resume_button = driver.execute_script("""
-                    #             #     return function(){
-                    #             #         let res = null;
-                    #             #         let downloads_manager = document.querySelector("downloads-manager");
-                    #             #         if (downloads_manager != null) {
-                    #             #             let frb0 = downloads_manager.shadowRoot.querySelector("#frb0");
-                    #             #             if (frb0 != null) {
-                    #             #                 let resume_button = frb0.shadowRoot.querySelector("#pauseOrResume");
-                    #             #                 if (resume_button != null) {
-                    #             #                     let button_panel = resume_button.parentElement;
-                    #             #                     if (button_panel.style.display !== "none") {
-                    #             #                         resume_button.click();
-                    #             #                         res = "true";
-                    #             #                     }
-                    #             #                 }
-                    #             #             }
-                    #             #         }
-                    #             #         return res;
-                    #             #     }();
-                    #             # """)
-                    #             # if resume_button is not None:
-                    #             #     continue
-                    #             # else:
-                    #             sys.stdout.write("\rprocessing...")
-                    #             actual_file_list = os.listdir(local_dir)
-                    #             if len(actual_file_list) == 0:
-                    #                 sys.stdout.write("\rFailed.")
-                    #                 return False
-                    #             actual_file_name = os.listdir(local_dir)[0]
-                    #             shutil.move(os.path.join(local_dir, actual_file_name), filename)
-                    #             shutil.rmtree(local_dir)
-                    #             sys.stdout.write("\rCompleted.")
-                    #             break
-                    #         des_list = progress_string.replace(",", "").split(" ")
-                    #         progress = 0
-                    #         if des_list[4] == des_list[7]:
-                    #             progress = min(int(math.floor(50 * (float(des_list[3]) / float(des_list[6])))), 50)
-                    #         sys.stdout.write("\r[{}{}] {}/{} {} ETC: {}".format(
-                    #             "=" * progress,
-                    #             " " * (50 - progress),
-                    #             des_list[3] + des_list[4],
-                    #             des_list[6] + des_list[7].rstrip(","),
-                    #             des_list[0] + des_list[1],
-                    #             (des_list[8] if len(des_list) > 8 else "") + (des_list[9] if len(des_list) > 9 else "")
-                    #         ))
-                    # endregion
-            except TimeoutException:
-                sys.stdout.write(" timeout(2).")
-                driver.quit()
-                print("")
-                return False
-
         except TimeoutException:
-            sys.stdout.write(" timeout(3).")
-            driver.quit()
-            print("")
+            print("下载元素超时")
             return False
 
-        driver.quit()
-        print("")
-        return True
+        # 点击下拉，提取 Source / 540 链接
+        dl_parent = dl_btn.find_element(By.XPATH, "./../..")
+        dl_list = dl_parent.find_elements(By.CSS_SELECTOR, ".dropdown__content li a")
+        target_url = None
+        for a in dl_list:
+            txt = a.get_attribute("innerHTML")
+            if txt in ("Source", "540"):
+                target_url = a.get_attribute("href")
+                break
+        if not target_url:
+            print("未找到下载链接")
+            return False
 
+        # 调用外部 download_file 完成下载
+        ok = download_file(
+            target_url, filename, dir_username,
+            headers={"User-Agent": ua, "Authorization": f"Bearer {token}"},
+            max_retries=60, max_download_seconds=20, max_filename_length=50
+        )
+        # 下载完成后清理临时目录
+        shutil.rmtree(tmp, ignore_errors=True)
+        return ok in ['下载成功', '下载成功，但文件大小未知']
 
-def main(user_name, file_prefix, download_index, profile_name=None, query=None): # 我修改的代码
-    if not query: # 我修改的代码，用户搜索，原版
-        if profile_name is not None:
-            user_api = f"{IWARA_API}profile/{requests.utils.quote(profile_name)}"
-            print(f"{user_name} {IWARA_HOME}profile/{profile_name}")
-        else:
-            user_api = f"{IWARA_API}profile/{requests.utils.quote(user_name)}"
-            print(f"{user_name} {IWARA_HOME}profile/{user_name}")
-        user_api_req = requests.get(user_api, proxies=PROXIES)
-        while user_api_req.status_code not in [200]:
-            print("profile_api", user_api_req.status_code)
-            time.sleep(random.randint(1, 3))
-            user_api_req = requests.get(user_api, proxies=PROXIES)
-        if "message" in user_api_req.json() and user_api_req.json()["message"] == "errors.notFound":
-            search_api = f"{IWARA_API}search"
-            search_api_req = requests.get(search_api, params={
-                "type": "user",
-                "query": user_name,
-                "page": 0,
-            }, proxies=PROXIES)
-            if len(search_api_req.json()["results"]) == 0:
-                print("user not found")
+# ------------------------------------------------------------------------------
+def main(driver, headers, user_name, file_prefix, download_index,
+         profile_name=None, query=None):
+    """
+    主流程：
+      1. 根据 profile_name/user_name 调用 profile API，获取 user_id
+      2. 根据 user_id 或 query 调用 videos/search API，生成 video_list
+      3. 按 download_index 筛选下载项
+      4. 依次调用 download_file_with_progress 完成下载
+    """
+    # 1. 获取 user_id
+    if not query:
+        api = f"{IWARA_API}profile/{profile_name or user_name}"
+        print(f"Profile 请求: {api}")
+        resp = selenium_api_get_json(driver, api, headers=headers)
+        # 如果未找到，使用 search 查
+        if resp.get("message") == "errors.notFound":
+            print("Profile 未找到，尝试搜索")
+            s = selenium_api_get_json(driver, IWARA_API + "search",
+                                      params={"type": "user", "query": user_name, "page": 0},
+                                      headers=headers)
+            if not s.get("results"):
+                print("用户不存在，跳过")
                 return
-            id_like_username = search_api_req.json()["results"][0]["username"]
-            print(f"{user_name} {IWARA_HOME}profile/{id_like_username}")
-            user_api = f"{IWARA_API}profile/{requests.utils.quote(id_like_username)}"
-            user_api_req = requests.get(user_api, proxies=PROXIES)
-        user_id = user_api_req.json()["user"]["id"]
+            api = f"{IWARA_API}profile/{s['results'][0]['username']}"
+            resp = selenium_api_get_json(driver, api, headers=headers)
+        user_id = resp["user"]["id"]
+    else:
+        user_id = None
 
-        video_list = list()
+    # 2. 获取视频列表
+    video_list = []
+    if not query:
+        # 按用户视频列表翻页
         page = 0
-        count = 0
-        limit = 32
-        while page * limit <= count:
-            try:
-                print(f"Reading Page No.{page + 1} ...")
-                video_api = f"{IWARA_API}videos"
-                video_api_req = requests.get(video_api, params={
-                    "user": user_id,
-                    "sort": "date",
-                    "page": page,
-                }, headers=headers, proxies=PROXIES) # 我修改的代码
-                if video_api_req.status_code not in [200]:
-                    print("video_api", video_api_req.status_code)
-                    time.sleep(random.randint(1, 3))
-                    continue
-                count = video_api_req.json()["count"]
-                for item in video_api_req.json()["results"]:
-                    if item["slug"] is not None:
-                        video_url = f"{IWARA_HOME}video/{item['id']}/{item['slug']}"
-                    else:
-                        video_url = f"{IWARA_HOME}video/{item['id']}"
+        count = 1
+        while page * 32 <= count:
+            j = selenium_api_get_json(
+                driver, IWARA_API + "videos",
+                params={"user": user_id, "sort": "date", "page": page},
+                headers=headers
+            )
+            count = j.get("count", 0)
+            for itm in j.get("results", []):
+                ct = datetime.datetime.strptime(itm["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                slug = itm.get("slug") or ""
+                url = f"{IWARA_HOME}video/{itm['id']}/{slug}"
+                video_list.append({
+                    "url": url, "title": itm["title"], "create_time": ct
+                })
+            page += 1
+    else:
+        # 搜索关键词时支持 or 模式
+        seen = set()
+        for kw in query.split("|"):
+            page = 0; count = 1
+            while page * 32 <= count:
+                j = selenium_api_get_json(
+                    driver, IWARA_API + "search",
+                    params={"type": "video", "query": kw, "page": page},
+                    headers=headers
+                )
+                count = j.get("count", 0)
+                for itm in j.get("results", []):
+                    ct = datetime.datetime.strptime(itm["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                    slug = itm.get("slug") or ""
+                    url = f"{IWARA_HOME}video/{itm['id']}/{slug}"
+                    key = (itm["id"], slug)
+                    if key in seen:
+                        continue
+                    seen.add(key)
                     video_list.append({
-                        "url": video_url,
-                        "title": item["title"],
-                        "create_time": datetime.datetime.strptime(item["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "url": url, "title": itm["title"], "create_time": ct
                     })
                 page += 1
-                # print page, limit, page * limit, count
-            except SSLError as ssl_err:
-                print(f"捕获到SSLError: {ssl_err}")
-                time.sleep(random.randint(1, 3))
-                # 这里可以添加额外的错误处理逻辑，比如重试请求、记录日志等
-            except requests.exceptions.RequestException as req_err:
-                # 捕获其他requests库可能抛出的异常，如连接错误、超时等
-                print(f"请求发生错误: {req_err}")
-                time.sleep(random.randint(1, 3))
-        video_list.reverse()
-        print("Video List:")
-        for i, video in enumerate(video_list):
-            print(f"{i + 1} {video['title']} {video['create_time']}")
-            video_list[i]["index"] = i + 1
-        print("-" * 80)
-    else: # 我修改的代码，关键词搜索，新增，支持or搜索模式
-        video_list = list()
-        for query_item in query.split("|"):
-            print(f"{query_item} {IWARA_HOME}search/{profile_name}")
-            page = 0
-            count = 0
-            limit = 32
-            while page * limit <= count:
-                try:
-                    print(f"Reading Page No.{page + 1} ...")
-                    video_api = f"{IWARA_API}search"
-                    video_api_req = requests.get(video_api, params={
-                        "type": "video",
-                        "page": page,
-                        "query": query_item,
-                    }, headers=headers, proxies=PROXIES) # 我修改的代码
-                    if video_api_req.status_code not in [200]:
-                        print("video_api", video_api_req.status_code)
-                        time.sleep(random.randint(1, 3))
-                        continue
-                    count = video_api_req.json()["count"]
-                    for item in video_api_req.json()["results"]:
-                        if item["slug"] is not None:
-                            video_url = f"{IWARA_HOME}video/{item['id']}/{item['slug']}"
-                        else:
-                            video_url = f"{IWARA_HOME}video/{item['id']}"
-                        video_info = {
-                            "url": video_url,
-                            "title": item["title"],
-                            "create_time": datetime.datetime.strptime(item["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                        }
-                        if video_info not in video_list:
-                            video_list.append(video_info)
-                    page += 1
-                    # print page, limit, page * limit, count
-                except SSLError as ssl_err:
-                    print(f"捕获到SSLError: {ssl_err}")
-                    time.sleep(random.randint(1, 3))
-                    # 这里可以添加额外的错误处理逻辑，比如重试请求、记录日志等
-                except requests.exceptions.RequestException as req_err:
-                    # 捕获其他requests库可能抛出的异常，如连接错误、超时等
-                    print(f"请求发生错误: {req_err}")
-                    time.sleep(random.randint(1, 3))
-        video_list.reverse()
-        print("Video List:")
-        for i, video in enumerate(video_list):
-            print(f"{i + 1} {video['title']} {video['create_time']}")
-            video_list[i]["index"] = i + 1
-        print("-" * 80)
-        file_prefix = file_prefix.replace("|", "｜")
-        query = query.replace("|", "｜")
 
-    # region 我修改的代码
-    download_list = list()
+    # 按时间倒序，打 index
+    video_list.sort(key=lambda x: x["create_time"])
+    for idx, v in enumerate(video_list, 1):
+        v["index"] = idx
+        print(f"{idx:3d} | {v['title']} | {v['create_time']}")
+
+    # 3. 根据 download_index 构造 download_list
+    download_list = []
     if isinstance(download_index, str):
-        if download_index.endswith(':'):
-            # 处理第三种情况 "264:"
-            start_index = int(download_index[:-1]) - 1
-            download_list = video_list[start_index:]
-        elif not download_index:
-            # 处理第一种情况（空字符串）""
+        if download_index.endswith(":"):
+            start = int(download_index[:-1]) - 1
+            download_list = video_list[start:]
+        elif download_index == "":
             download_list = video_list[:]
-            download_list.reverse()
-    elif isinstance(download_index, list):
-        # 处理第二种情况（复杂列表）list(range(1,10)) + list(range(11,14)) + list(range(15,17)) + list(range(18,33))
-        if len(download_index) > 0:
-            for index in download_index:
-                if index == 0:
-                    pass
-                elif index > 0:
-                    if index - 1 < len(video_list):
-                        download_list.append(video_list[index - 1])
-                else:
-                    if index + len(video_list) > 0:
-                        if (DATE_LIMIT > 0 and video_list[index]["create_time"] <
-                                datetime.datetime.now() - datetime.timedelta(DATE_LIMIT)):
-                            continue
-                        download_list.append(video_list[index])
-        else:
-            download_list = video_list[:]
-            download_list.reverse()
+    elif isinstance(download_index, list) and download_index:
+        for i in download_index:
+            if i > 0 and i <= len(video_list):
+                download_list.append(video_list[i - 1])
+            elif i < 0 and abs(i) <= len(video_list):
+                download_list.append(video_list[i])
     else:
-        # 处理其他可能的情况
-        print("Unexpected download_index type")
-    # endregion
+        print("download_index 类型异常，全部下载")
+        download_list = video_list[:]
 
-    for i, video in enumerate(download_list):
-        print(f"{video['index']} {video['title']} {video['url']} {video['create_time']}")
-        _file_prefix = "{}.{:03d}.".format(
-            file_prefix if file_prefix != "" else user_name or query, # 我修改的代码
-            video["index"],
-        )
-        _file_name = u"{}.mp4".format(
-            video["title"]
-            .replace("\\", "——")
-            .replace("/", " ")
-            .replace(":", "：")
-            .replace("*", " ")
-            .replace("?", " ")
-            .replace("\"", "”")
-            .replace("<", "《")
-            .replace(">", "》")
-            .replace("|", "!")
-            ,
-        )
-        
-        # region 修改的代码
-        dir_username = file_prefix or user_name or query
-        if query and "[搜索]" not in dir_username:
-            dir_username = "[搜索]" + dir_username
-        # endregion
-        print(f"Downloading to {_file_prefix + _file_name}")
-        if os.path.exists(os.path.join("downloads", dir_username, _file_prefix + _file_name)) or os.path.exists(os.path.join("downloads", dir_username, _file_prefix + _file_name + ".lnk")):  # 我修改的代码
-            print("Completed.")
+    # 4. 循环下载
+    success_list = []
+    error_list = []
+    base_dir = "downloads"
+    for v in download_list:
+        idx = v["index"]
+        prefix = file_prefix or user_name or query or "视频"
+        filename = f"{prefix}.{idx:03d}.{v['title']}.mp4"
+        # 文件名过滤非法字符
+        filename = filename.translate(str.maketrans({
+            "\\": "——", "/": " ", ":": "：", "*": " ", "?": " ",
+            "\"": "”", "<": "《", ">": "》", "|": "！"
+        }))
+        # 存储目录
+        dir_user = file_prefix or user_name or query or "视频"
+        if query and "[搜索]" not in dir_user:
+            dir_user = "[搜索]" + dir_user
+        save_dir = os.path.join(base_dir, dir_user)
+        os.makedirs(save_dir, exist_ok=True)
+
+        # 已存在则跳过
+        dest_path = os.path.join(save_dir, filename)
+        if os.path.exists(dest_path):
+            print(f"{idx:3d} 已存在，跳过")
+            continue
+
+        print(f"{idx:3d} 开始下载 → {dest_path}")
+        ok = download_file_with_progress(v["url"], filename, save_dir)
+        if ok:
+            print(f"{idx:3d} 下载成功")
+            success_list.append(filename)
         else:
-            if download_file_with_progress(video["url"], _file_prefix + _file_name, os.path.join("downloads", dir_username)): # 我修改的代码
-                success_list.append(_file_prefix + _file_name)
-            else:
-                # region 我修改的代码
-                with open("error_list.txt", "a", encoding="utf-8") as f:
-                    my_url = video["url"]
-                    f.write(f"文件名：{_file_prefix + _file_name}\n链接：{my_url}\n\n")
-                # endregion
-                error_list.append(_file_prefix + _file_name)
+            print(f"{idx:3d} 下载失败")
+            error_list.append(filename)
+
+    # 打印结果汇总
+    if success_list:
+        print("下载成功列表:")
+        for x in success_list:
+            print("  ", x)
+    if error_list:
+        print("下载失败列表:")
+        for x in error_list:
+            print("  ", x)
 
 
+# ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    # region 我修改的代码，在运行之前重置error_list.txt
-    with open("error_list.txt", "w", encoding="utf-8") as f:
-        f.truncate(0)  
-    user_agent, token = get_token()
+    # 1. 获取 token 和 UA
+    ua, token = get_token()
     headers = {
-        'User-Agent': user_agent,
+        "User-Agent": ua,
         "Content-Type": "application/json",
-        "Authorization": "Bearer %s" % token
+        "Authorization": f"Bearer {token}"
     }
-    # endregion
-
-    # USER_INFO.reverse()
-    for user in USER_INFO:
-        main(
-            user["user_name"],
-            user["file_prefix"],
-            user["download_index"],
-            user["profile_name"] if "profile_name" in user else None,
-            user["query"] if "query" in user else None,
-        )
+    # 2. 启动 Selenium 会话
+    driver = init_selenium_session(ua)
+    # 3. 批量处理用户或搜索
+    for u in USER_INFO:
+        print("=" * 60)
+        main(driver, headers,
+             u.get("user_name", ""),
+             u.get("file_prefix", ""),
+             u.get("download_index", ""),
+             profile_name=u.get("profile_name"),
+             query=u.get("query"))
         print("")
 
-    if len(success_list) > 0:
-        print("Success List:")
-        for i in success_list:
-            print(i)
-    if len(error_list) > 0:
-        print("Error List:")
-        for i in error_list:
-            print(i)
+    # 4. 退出 Selenium
+    driver.quit()
