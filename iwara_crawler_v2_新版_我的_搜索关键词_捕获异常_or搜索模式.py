@@ -109,6 +109,8 @@ PROXIES = {
 }
 IWARA_HOME = "https://www.iwara.tv/"
 IWARA_API = "https://api.iwara.tv/"
+# 脚本同级目录下的错误日志文件
+ERROR_LOG = os.path.join(os.path.dirname(__file__), 'error_list.txt')
 
 # ------------------------------------------------------------------------------
 def get_token():
@@ -289,6 +291,8 @@ def main(driver, headers, user_name, file_prefix, download_index,
       3. 按 download_index 筛选下载项
       4. 依次调用 download_file_with_progress 完成下载
     """
+    # 启动时清空老的 error_list.txt（可选，也可以保留历史）
+    open(ERROR_LOG, 'w', encoding='utf-8').close()
     # 1. 获取 user_id
     if not query:
         api = f"{IWARA_API}profile/{profile_name or user_name}"
@@ -412,6 +416,12 @@ def main(driver, headers, user_name, file_prefix, download_index,
             success_list.append(filename)
         else:
             print(f"{idx:3d} 下载失败")
+            # 追加写入 error_list.txt
+            try:
+                with open(ERROR_LOG, 'a', encoding='utf-8') as ef:
+                    ef.write(f"{filename} 下载失败，URL: {v['url']}\n")
+            except Exception as e:
+                print(f"写入错误日志失败: {e}")
             error_list.append(filename)
 
     # 打印结果汇总
