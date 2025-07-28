@@ -29,54 +29,54 @@ from mymodule import download_file
 
 # 用户批量配置：username/file_prefix/download_index/profile_name/query
 USER_INFO = [
-    {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
-    {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
-    {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
-    {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
-    {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
-    {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
-    {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
-    {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
-    {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
-    {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
-    {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
-    {"user_name": "user15566", "profile_name": "user15566", "file_prefix": "sb5", "download_index": "32:"},
-    {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil", "download_index": "2:", "file_prefix": ""},
-    {"user_name": "fengyunmomo", "profile_name": "fengyunmomo", "download_index": "", "file_prefix": ""},
-    {"user_name": "txwy", "profile_name": "txwy", "download_index": "", "file_prefix": ""},
-    {"user_name": "Arx_MMD", "profile_name": "arxmmd", "download_index": "", "file_prefix": ""},
-    {"user_name": "akomni", "profile_name": "akomni", "download_index": "44:", "file_prefix": ""},
-    {"user_name": "千种咲夜子", "profile_name": "user1866311", "download_index": "", "file_prefix": ""},
-    {"user_name": "xiangweitudou", "profile_name": "user1936430", "download_index": "", "file_prefix": ""},
-    {"user_name": "PastaPaprika", "profile_name": "pastapaprika", "download_index": "", "file_prefix": ""},
-    {"user_name": "10yue", "profile_name": "10yue", "download_index": "", "file_prefix": ""},
-    {"user_name": "ダンリック", "profile_name": "user8160", "download_index": "", "file_prefix": ""},
-    {"user_name": "lovely416", "profile_name": "zehk416", "download_index": "", "file_prefix": ""},
-    {"user_name": "在下神奈有何贵干", "profile_name": "user1851714", "download_index": "", "file_prefix": ""},
-    {"user_name": "kemkem", "profile_name": "kemkem", "download_index": "", "file_prefix": ""},
-    {"user_name": "ReHaku", "profile_name": "rehaku", "download_index": "", "file_prefix": ""},
-    {"user_name": "iskanime", "profile_name": "iskanime", "download_index": "", "file_prefix": ""},
-    {"user_name": "tuiwannian", "profile_name": "user221116", "download_index": "700:", "file_prefix": ""},
-    {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
-    {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
-    {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
+    # {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
+    # {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
+    # {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
+    # {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
+    # {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
+    # {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
+    # {"user_name": "user15566", "profile_name": "user15566", "file_prefix": "sb5", "download_index": "32:"},
+    # {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil", "download_index": "2:", "file_prefix": ""},
+    # {"user_name": "fengyunmomo", "profile_name": "fengyunmomo", "download_index": "", "file_prefix": ""},
+    # {"user_name": "txwy", "profile_name": "txwy", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Arx_MMD", "profile_name": "arxmmd", "download_index": "", "file_prefix": ""},
+    # {"user_name": "akomni", "profile_name": "akomni", "download_index": "44:", "file_prefix": ""},
+    # {"user_name": "千种咲夜子", "profile_name": "user1866311", "download_index": "", "file_prefix": ""},
+    # {"user_name": "xiangweitudou", "profile_name": "user1936430", "download_index": "", "file_prefix": ""},
+    # {"user_name": "PastaPaprika", "profile_name": "pastapaprika", "download_index": "", "file_prefix": ""},
+    # {"user_name": "10yue", "profile_name": "10yue", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ダンリック", "profile_name": "user8160", "download_index": "", "file_prefix": ""},
+    # {"user_name": "lovely416", "profile_name": "zehk416", "download_index": "", "file_prefix": ""},
+    # {"user_name": "在下神奈有何贵干", "profile_name": "user1851714", "download_index": "", "file_prefix": ""},
+    # {"user_name": "kemkem", "profile_name": "kemkem", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ReHaku", "profile_name": "rehaku", "download_index": "", "file_prefix": ""},
+    # {"user_name": "iskanime", "profile_name": "iskanime", "download_index": "", "file_prefix": ""},
+    # {"user_name": "tuiwannian", "profile_name": "user221116", "download_index": "700:", "file_prefix": ""},
+    # {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
+    # {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
+    # {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
     {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
-    {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
-    {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
-    # # -----------------------------------------------------------
-    # # 整活（时间停止、催眠、绅士之手）
-    {"user_name": "QNR", "profile_name": "qnr", "download_index": "30:", "file_prefix": ""},
-    {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621", "download_index": "", "file_prefix": ""},
-    {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu", "download_index": "", "file_prefix": ""},
-    {"user_name": "noneferoero", "profile_name": "noneferoero", "download_index": "", "file_prefix": ""},
-    {"user_name": "yafrmmd", "profile_name": "yafrmmd", "download_index": "", "file_prefix": ""},
-    {"user_name": "sodeno19", "profile_name": "sodeno19", "download_index": "", "file_prefix": ""},
-    {"user_name": "Garnet2020", "profile_name": "garnet2020", "download_index": "", "file_prefix": ""},
-    {"user_name": "xiaodidi09", "profile_name": "xiaodidi09", "download_index": "", "file_prefix": ""},
-    {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
-    {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
-    {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
-    {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
+    # {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
+    # # # -----------------------------------------------------------
+    # # # 整活（时间停止、催眠、绅士之手）
+    # {"user_name": "QNR", "profile_name": "qnr", "download_index": "30:", "file_prefix": ""},
+    # {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621", "download_index": "", "file_prefix": ""},
+    # {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu", "download_index": "", "file_prefix": ""},
+    # {"user_name": "noneferoero", "profile_name": "noneferoero", "download_index": "", "file_prefix": ""},
+    # {"user_name": "yafrmmd", "profile_name": "yafrmmd", "download_index": "", "file_prefix": ""},
+    # {"user_name": "sodeno19", "profile_name": "sodeno19", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Garnet2020", "profile_name": "garnet2020", "download_index": "", "file_prefix": ""},
+    # {"user_name": "xiaodidi09", "profile_name": "xiaodidi09", "download_index": "", "file_prefix": ""},
+    # {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
+    # {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
+    # {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
     {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # 淫词艳曲
@@ -93,7 +93,7 @@ USER_INFO = [
     {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
-    {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
+    # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": "標識|ero sign|sign strip|hentai sign"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "時間停止", "query": "時間 停止|time stop|时间 停止|时停|時停"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "紳士枠", "query": "枠|透視|框|透视"},
@@ -158,13 +158,24 @@ def init_selenium_session(user_agent: str):
     """
     opts = webdriver.ChromeOptions()
     opts.add_argument("--headless=new")
-    opts.add_argument("--lang=en-US")
+    opts.add_argument("--lang=zh")
     opts.add_argument(f"--user-agent={user_agent}")
     if "http" in PROXIES:
         opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
+    # 禁用 Blink 的 AutomationControlled 特征，绕过简单的自动化检测
+    opts.add_argument("--disable-blink-features=AutomationControlled")
+    # 可选：去掉 “enable-automation” 提示条，并关闭自动化扩展
+    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
+    opts.add_experimental_option("useAutomationExtension", False)
     driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"),
                               options=opts)
-
+    # region 隐藏爬虫特征
+    with open('./stealth.min.js') as f:
+        inject_js = f.read()
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+    "source": inject_js 
+    })
+    # endregion
     # 导航到 i-wara 主站，让浏览器上下文落在 https://www.iwara.tv
     driver.get(IWARA_HOME)
     # 把 token 注入到 localStorage
@@ -251,7 +262,7 @@ def download_file_with_progress(url, filename, dir_username):
         driver.get(url)
         # 等待下载按钮出现
         try:
-            dl_btn = WebDriverWait(driver, 20).until(
+            dl_btn = WebDriverWait(driver, 40).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".downloadButton"))
             )
         except TimeoutException:
@@ -275,7 +286,7 @@ def download_file_with_progress(url, filename, dir_username):
         ok = download_file(
             target_url, filename, dir_username,
             headers={"User-Agent": ua, "Authorization": f"Bearer {token}"},
-            max_retries=60, max_download_seconds=20, max_filename_length=50
+            max_retries=60, max_download_seconds=40, max_filename_length=50
         )
         # 下载完成后清理临时目录
         shutil.rmtree(tmp, ignore_errors=True)
