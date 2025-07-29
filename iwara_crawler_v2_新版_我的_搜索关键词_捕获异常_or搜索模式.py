@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-完整脚本：将所有 Selenium JSON 接口调用更新为“访问 API → 等待 JSON 渲染 → 提取并解析 JSON”的方式，
-其他功能保持一致，并附有详细中文注释。
+完整脚本：将 Selenium 替换为 undetected-chromedriver（uc），
+其他功能保持不变，并附上详细中文注释。
 """
 
 import os
@@ -16,12 +16,7 @@ import datetime
 from urllib.parse import urlencode
 
 from fake_useragent import UserAgent
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+import undetected_chromedriver as uc  # 使用 undetected-chromedriver 以躲避反爬检测
 
 # 自定义下载逻辑：需自行实现 download_file(url, filename, dir_username, headers, ...)
 from mymodule import download_file
@@ -59,7 +54,7 @@ USER_INFO = [
     # {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
     # {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
     # {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
-    {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
+    # {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
     # {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
     # {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
     # # # -----------------------------------------------------------
@@ -101,76 +96,81 @@ USER_INFO = [
 
 # 全局常量
 DATE_LIMIT = 0    # 天数限制：0 表示不限制，>0 表示只下载近 N 天的视频
-PROXIES = {}      # 如需代理，填入 HTTP/HTTPS 配置
+PROXIES    = {}  # 如需代理，请填充 http/https
 IWARA_HOME = "https://www.iwara.tv/"
 IWARA_API  = "https://api.iwara.tv/"
 ERROR_LOG  = os.path.join(os.path.dirname(__file__), 'error_list.txt')
-TIMEOUT_SEC = 40
+TIMEOUT_SEC = 60
 
 # ------------------------------------------------------------------------------
 def get_token():
     """
-    获取本地 token：
-      1. 如果不存在 token.json，则启动带 UA 的浏览器到登录页，人工扫码或自动登录后
-         从 localStorage 读取 token 并保存到 token.json
-      2. 已存在则直接读取 token.json
-    返回：user_agent, token
+    获取并缓存 token：
+      1. 无 token.json 时，用 uc.Chrome 打开登录页，人工扫码/登录
+      2. 从 localStorage 读取 token 并保存为 token.json
+      3. 如果已存在 token.json，则直接读取
+    返回： (user_agent, token)
     """
     if not os.path.exists("token.json"):
+        # 生成随机 UA 并配置浏览器
         ua = UserAgent().random
-        opts = webdriver.ChromeOptions()
+        opts = uc.ChromeOptions()
+        opts.headless = False
+        opts.add_argument("--disable-blink-features=AutomationControlled") # 隐藏自动化痕迹
         opts.add_argument(f"--user-agent={ua}")
+        # 可选：开启代理
         if "http" in PROXIES:
             opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
-        driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"), options=opts)
+        # 启动 undetected-chromedriver
+        driver = uc.Chrome(options=opts, driver_executable_path="./chromedriver.exe")
         driver.get(IWARA_HOME + "login")
+
         # 等待 localStorage 存入 token
         while True:
             token = driver.execute_script("return window.localStorage.getItem('token');")
             if token:
                 break
-            time.sleep(1 + random.random() * 2)
+            time.sleep(1 + random.random()*2)
+
         driver.quit()
-        # 写入 token.json
+
+        # 保存到 token.json
         with open("token.json", "w", encoding="utf-8") as f:
             json.dump({"user_agent": ua, "token": token}, f, indent=2)
     else:
+        # 直接读取已有的 token.json
         cfg = json.load(open("token.json", encoding="utf-8"))
         ua    = cfg["user_agent"]
         token = cfg["token"]
+
     return ua, token
 
 # ------------------------------------------------------------------------------
-def init_selenium_session(user_agent: str):
+def init_uc_session(user_agent: str):
     """
-    初始化 Selenium ChromeDriver 用于 API 请求
-      - headless 模式，设置语言和 UA
-      - 隐藏 AutomationControlled 特征，注入 stealth 脚本
-      - 导航到 IWARA_HOME，注入 token 到 localStorage
-    返回：已登录注入 token 的 driver
+    初始化 undetected-chromedriver 会话，用于后续 API 请求
+      - headless 模式
+      - 设置语言、UA、隐藏自动化特征
+      - 注入 token 到 localStorage，避免每次登录
+    返回： 已注入 token 的 uc.Chrome 实例
     """
-    opts = webdriver.ChromeOptions()
-    opts.add_argument("--headless=new")
-    opts.add_argument("--lang=zh")
+    opts = uc.ChromeOptions()
+    opts.headless = True           # 无头模式
+    opts.add_argument("--lang=zh-CN")  # 浏览器语言
     opts.add_argument(f"--user-agent={user_agent}")
+    # 隐藏自动化痕迹
+    opts.add_argument("--disable-blink-features=AutomationControlled")
+    # 可选：开启代理
     if "http" in PROXIES:
         opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
-    opts.add_argument("--disable-blink-features=AutomationControlled")
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
-    opts.add_experimental_option("useAutomationExtension", False)
-    driver = webdriver.Chrome(service=ChromeService("./chromedriver.exe"), options=opts)
 
-    # region 隐藏爬虫特征：在每个新文档里注入 stealth.min.js
-    with open('./stealth.min.js', 'r', encoding='utf-8') as f:
-        stealth_js = f.read()
-    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": stealth_js
-    })
-    # endregion
+    # 启动 undetected-chromedriver
+    driver = uc.Chrome(options=opts, driver_executable_path="./chromedriver.exe")
 
-    # 导航到主站，保持同源上下文
+    # 导航到主站，保持同源
     driver.get(IWARA_HOME)
-    # 注入 token 和 ecchi 标记到 localStorage
+
+    # 注入 token 与 ecchi 标记到 localStorage
     token = json.load(open("token.json", encoding="utf-8"))["token"]
     driver.execute_script(f"window.localStorage.setItem('token','{token}');")
     driver.execute_script("window.localStorage.setItem('ecchi','1');")
@@ -180,109 +180,117 @@ def init_selenium_session(user_agent: str):
 # ------------------------------------------------------------------------------
 def selenium_api_get_json(driver, url: str, params: dict = None, headers: dict = None):
     """
-    用 Selenium 访问 API 并获取 JSON，分三步：
-      1. 访问 API：使用 CDP 设置额外请求头后，driver.get(full_url)
-      2. 等待 JSON 渲染：等待 <body> 出现花括号文本
-      3. 提取并解析 JSON：取出 body.text 并 json.loads
-    返回：Python 原生对象（dict/list）
+    通过 undetected-chromedriver 访问 API 并获取 JSON：
+      1. Network.setExtraHTTPHeaders 注入 headers
+      2. driver.get(full_url) 触发请求
+      3. 等待 <body> 渲染，提取并解析 body.text
+    返回 Python 原生对象（dict 或 list）
     """
-    # 如果当前不在 iwara.tv 同源上下文，先导航到主站
-    if not (driver.current_url.startswith(IWARA_HOME) or
-            driver.current_url.startswith(IWARA_API)):
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.common.exceptions import TimeoutException
+
+    # 确保同源上下文
+    if not (driver.current_url.startswith(IWARA_HOME) or driver.current_url.startswith(IWARA_API)):
         driver.get(IWARA_HOME)
 
-    # 构造完整 URL（拼接查询参数）
+    # 拼接查询参数
     full_url = url
     if params:
-        qs = urlencode(params)
-        full_url = f"{url}?{qs}"
+        full_url = f"{url}?{urlencode(params)}"
 
-    # 1. 访问 API：先启用 Network 并注入请求头
+    # 1. 注入请求头
     driver.execute_cdp_cmd("Network.enable", {})
     driver.execute_cdp_cmd("Network.setExtraHTTPHeaders", {"headers": headers})
+
+    # 2. 访问 API
     driver.get(full_url)
 
-    # 2. 等待 JSON 渲染：body.text 以 { 开头即视为完成
+    # 3. 等待 body.text 以 { 开头
     try:
         WebDriverWait(driver, TIMEOUT_SEC).until(
             lambda d: d.find_element(By.TAG_NAME, "body").text.strip().startswith("{")
         )
     except TimeoutException:
-        raise RuntimeError(f"JSON 渲染超时: {full_url}")
+        raise RuntimeError(f"[Fetch JSON] 渲染超时: {full_url}")
 
-    # 3. 提取并解析 JSON
+    # 提取并解析 JSON
     raw = driver.find_element(By.TAG_NAME, "body").text
     try:
-        result = json.loads(raw)
+        return json.loads(raw)
     except Exception as e:
-        raise RuntimeError(f"JSON 解析失败: {e}\nRaw Text: {raw[:200]}...")
-    return result
+        raise RuntimeError(f"[Fetch JSON] 解析失败: {e}\nRaw: {raw[:200]}")
 
 # ------------------------------------------------------------------------------
 def download_file_with_progress(url, filename, dir_username):
     """
-    Selenium + 本地下载目录方式下载视频文件
+    使用 undetected-chromedriver + 本地下载目录 下载单个视频：
+      1. 启动临时 uc.Chrome，设置 download.default_directory
+      2. 跳转到视频页面，点击下载按钮并获取真实链接
+      3. 调用外部 download_file 完成文件保存
+    返回：True/False
     """
-    root = os.path.join(os.path.dirname(__file__), "tmp_dir")
-    rand = "".join(random.choices(string.ascii_lowercase, k=8))
-    tmp = os.path.join(root, rand)
-    os.makedirs(tmp, exist_ok=True)
+    # 创建随机临时下载目录
+    # root = os.path.join(os.path.dirname(__file__), "tmp_dir")
+    # rnd  = "".join(random.choices(string.ascii_lowercase, k=8))
+    # tmp  = os.path.join(root, rnd)
+    # os.makedirs(tmp, exist_ok=True)
 
-    opts = webdriver.ChromeOptions()
-    opts.add_argument("--disable-blink-features=AutomationControlled")
-    opts.add_experimental_option("excludeSwitches", ["enable-automation"])
-    opts.add_experimental_option("useAutomationExtension", False)
-    opts.add_argument("--lang=zh")
-    opts.add_experimental_option("prefs", {
-        "download.default_directory": tmp,
-    })
+    # 配置浏览器 prefs
+    opts = uc.ChromeOptions()
+    opts.add_argument("--lang=zh-CN")
+    # prefs = {"download.default_directory": tmp}
+    # opts.add_experimental_option("prefs", prefs)
     if "http" in PROXIES:
         opts.add_argument(f"--proxy-server={PROXIES['http'].replace('http://','')}")
     ua, token = get_token()
     opts.add_argument(f"--user-agent={ua}")
-    opts.add_argument("--headless=new")
+    # 隐藏自动化痕迹
+    opts.add_argument("--disable-blink-features=AutomationControlled")
+    opts.headless = True
 
-    with webdriver.Chrome(service=ChromeService("./chromedriver.exe"), options=opts) as dl_drv:
+    # 启动下载专用浏览器
+    with uc.Chrome(options=opts, driver_executable_path="./chromedriver.exe") as dl_drv:
         # 注入 token
-
-        # region 隐藏爬虫特征：在每个新文档里注入 stealth.min.js
-        with open('./stealth.min.js', 'r', encoding='utf-8') as f:
-            stealth_js = f.read()
-        dl_drv.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": stealth_js
-        })
-        # endregion
-        
         dl_drv.get(IWARA_HOME)
         dl_drv.execute_script(f"window.localStorage.setItem('token','{token}');")
         dl_drv.execute_script("window.localStorage.setItem('ecchi','1');")
-        # 跳转到视频页面，等待下载按钮
+
+        # 跳转到视频页面，等待下载按钮出现
         dl_drv.get(url)
         try:
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            from selenium.common.exceptions import TimeoutException
+
             btn = WebDriverWait(dl_drv, TIMEOUT_SEC).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".downloadButton"))
             )
         except TimeoutException:
-            print("下载按钮超时")
+            print("[下载] 按钮超时")
             return False
 
+        # 从下拉菜单提取 Source 或 540 链接
         parent = btn.find_element(By.XPATH, "./../..")
-        links = parent.find_elements(By.CSS_SELECTOR, ".dropdown__content li a")
+        links  = parent.find_elements(By.CSS_SELECTOR, ".dropdown__content li a")
         target = None
         for a in links:
-            txt = a.get_attribute("innerHTML")
-            if txt in ("Source", "540"):
+            if a.get_attribute("innerHTML") in ("Source", "540"):
                 target = a.get_attribute("href")
                 break
         if not target:
-            print("未找到下载链接")
+            print("[下载] 未找到下载链接")
             return False
 
+        # 使用已有的 download_file 工具
         ok = download_file(
             target, filename, dir_username,
             headers={"User-Agent": ua, "Authorization": f"Bearer {token}"},
             max_retries=60, max_download_seconds=TIMEOUT_SEC, max_filename_length=50
         )
+        # 清理临时目录
         shutil.rmtree(tmp, ignore_errors=True)
         return ok in ['下载成功', '下载成功，但文件大小未知']
 
@@ -291,25 +299,28 @@ def main(driver, headers, user_name, file_prefix, download_index,
          profile_name=None, query=None):
     """
     主流程：
-      1. 获取 user_id（profile 或 search）
+      1. 获取 user_id （profile 或 search）
       2. 翻页拉取视频列表
-      3. 按 download_index 筛选
-      4. 依次调用 download_file_with_progress 下载
+      3. 根据 download_index 筛选
+      4. 循环调用 download_file_with_progress
     """
+    # 清空历史错误日志
     open(ERROR_LOG, 'w', encoding='utf-8').close()
 
     # 1. 获取 user_id
     if not query:
-        api = f"{IWARA_API}profile/{profile_name or user_name}"
+        api  = f"{IWARA_API}profile/{profile_name or user_name}"
+        print("正在爬取：%s" % api)
         resp = selenium_api_get_json(driver, api, headers=headers)
         if resp.get("message") == "errors.notFound":
+            # profile 未找到则用 search 接口
             s = selenium_api_get_json(
                 driver, IWARA_API + "search",
-                params={"type": "user", "query": user_name, "page": 0},
+                params={"type":"user","query":user_name,"page":0},
                 headers=headers
             )
             if not s.get("results"):
-                print("用户不存在，跳过")
+                print(f"[跳过] 用户 {user_name} 不存在")
                 return
             api  = f"{IWARA_API}profile/{s['results'][0]['username']}"
             resp = selenium_api_get_json(driver, api, headers=headers)
@@ -321,48 +332,49 @@ def main(driver, headers, user_name, file_prefix, download_index,
     video_list = []
     if not query:
         page, count = 0, 1
-        while page * 32 <= count:
+        while page*32 <= count:
             j = selenium_api_get_json(
                 driver, IWARA_API + "videos",
-                params={"user": user_id, "sort": "date", "page": page},
+                params={"user":user_id,"sort":"date","page":page},
                 headers=headers
             )
             count = j.get("count", 0)
             for itm in j.get("results", []):
                 ct   = datetime.datetime.strptime(itm["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                slug = itm.get("slug") or ""
+                slug = itm.get("slug","")
                 url  = f"{IWARA_HOME}video/{itm['id']}/{slug}"
-                video_list.append({"url": url, "title": itm["title"], "create_time": ct})
+                video_list.append({"url":url,"title":itm["title"],"create_time":ct})
             page += 1
     else:
         seen = set()
         for kw in query.split("|"):
+            print("正在搜索关键词：%s" % kw)
             page, count = 0, 1
-            while page * 32 <= count:
+            while page*32 <= count:
                 j = selenium_api_get_json(
                     driver, IWARA_API + "search",
-                    params={"type": "video", "query": kw, "page": page},
+                    params={"type":"video","query":kw,"page":page},
                     headers=headers
                 )
-                count = j.get("count", 0)
-                for itm in j.get("results", []):
+                count = j.get("count",0)
+                for itm in j.get("results",[]):
                     ct   = datetime.datetime.strptime(itm["createdAt"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                    slug = itm.get("slug") or ""
+                    slug = itm.get("slug","")
                     url  = f"{IWARA_HOME}video/{itm['id']}/{slug}"
-                    key  = (itm["id"], slug)
+                    key  = (itm["id"],slug)
                     if key in seen:
                         continue
                     seen.add(key)
-                    video_list.append({"url": url, "title": itm["title"], "create_time": ct})
+                    video_list.append({"url":url,"title":itm["title"],"create_time":ct})
                 page += 1
 
-    # 倒序排序并打 index
+    # 按日期排序并编号
     video_list.sort(key=lambda x: x["create_time"])
     for idx, v in enumerate(video_list, 1):
         v["index"] = idx
         print(f"{idx:3d} | {v['title']} | {v['create_time']}")
 
-    # 3. 根据 download_index 构建下载列表
+    # 3. 筛选下载列表
     download_list = []
     if isinstance(download_index, str):
         if download_index.endswith(":"):
@@ -373,23 +385,24 @@ def main(driver, headers, user_name, file_prefix, download_index,
     elif isinstance(download_index, list) and download_index:
         for i in download_index:
             if 1 <= i <= len(video_list):
-                download_list.append(video_list[i - 1])
+                download_list.append(video_list[i-1])
     else:
         download_list = video_list[:]
 
-    # 4. 循环下载
+    # 4. 执行下载
     success_list, error_list = [], []
     base_dir = "downloads"
     for v in download_list:
         idx    = v["index"]
         prefix = file_prefix or user_name or query or "视频"
         fn     = f"{prefix}.{idx:03d}.{v['title']}.mp4"
-        fn     = fn.translate(str.maketrans({
-            "\\": "——", "/": " ", ":": "：", "*": " ", "?": " ",
-            "\"": "”", "<": "《", ">": "》", "|": "！"
+        # 过滤非法字符
+        fn = fn.translate(str.maketrans({
+            "\\":"——","/":" ","*":" ","?":" ",
+            ":":"：","\"":"”","<":"《",">":"》","|":"！"
         }))
         user_dir = file_prefix or user_name or query or "视频"
-        if query and "[搜索]" not in user_dir:
+        if query and not user_dir.startswith("[搜索]"):
             user_dir = "[搜索]" + user_dir
         save_dir = os.path.join(base_dir, user_dir)
         os.makedirs(save_dir, exist_ok=True)
@@ -410,7 +423,7 @@ def main(driver, headers, user_name, file_prefix, download_index,
                 ef.write(f"{fn} 下载失败，URL: {v['url']}\n")
             error_list.append(fn)
 
-    # 打印汇总
+    # 下载结果汇总
     if success_list:
         print("下载成功列表:")
         for x in success_list:
@@ -422,16 +435,18 @@ def main(driver, headers, user_name, file_prefix, download_index,
 
 # ------------------------------------------------------------------------------
 if __name__ == "__main__":
-    # 1. 获取 token 和 UA
+    # 1. 获取 token 与 UA
     ua, token = get_token()
     headers = {
         "User-Agent": ua,
         "Content-Type": "application/json",
         "Authorization": f"Bearer {token}"
     }
-    # 2. 启动 Selenium 会话
-    driver = init_selenium_session(ua)
-    # 3. 批量处理
+
+    # 2. 初始化 undetected-chromedriver 会话
+    driver = init_uc_session(ua)
+
+    # 3. 批量执行
     for u in USER_INFO:
         print("=" * 60)
         main(driver, headers,
@@ -441,5 +456,6 @@ if __name__ == "__main__":
              profile_name=u.get("profile_name"),
              query=u.get("query"))
         print("")
-    # 4. 退出
+
+    # 4. 退出浏览器
     driver.quit()
