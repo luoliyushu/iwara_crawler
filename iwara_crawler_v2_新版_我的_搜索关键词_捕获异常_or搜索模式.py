@@ -18,6 +18,11 @@ from urllib.parse import urlencode
 from fake_useragent import UserAgent
 import undetected_chromedriver as uc  # 使用 undetected-chromedriver 以躲避反爬检测
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
 # 自定义下载逻辑：需自行实现 download_file(url, filename, dir_username, headers, ...)
 from mymodule import download_file
 
@@ -71,23 +76,23 @@ USER_INFO = [
     # {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
     # {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
     # {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
-    {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
-    # # -----------------------------------------------------------
-    # # 淫词艳曲
-    {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
-    {"user_name": "YZLZ", "profile_name": "yzlzhhzwty", "download_index": "", "file_prefix": ""},
-    {"user_name": "粉红色猫猫头", "profile_name": "user205029", "download_index": "", "file_prefix": ""},
-    {"user_name": "整夜下雪", "profile_name": "user340036", "download_index": "", "file_prefix": ""},
-    # # -----------------------------------------------------------
-    {"user_name": "水水..", "profile_name": "user937858", "file_prefix": "水水..a", "download_index": "305:"},
-    {"user_name": "qishi", "profile_name": "qishi", "download_index": "264:", "file_prefix": ""},
-    {"user_name": "LTDEND", "profile_name": "ltdend", "download_index": "236:", "file_prefix": ""},
-    # # -----------------------------------------------------------
-    # # R18的很少
-    {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
+    # {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
+    # # # -----------------------------------------------------------
+    # # # 淫词艳曲
+    # {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
+    # {"user_name": "YZLZ", "profile_name": "yzlzhhzwty", "download_index": "", "file_prefix": ""},
+    # {"user_name": "粉红色猫猫头", "profile_name": "user205029", "download_index": "", "file_prefix": ""},
+    # {"user_name": "整夜下雪", "profile_name": "user340036", "download_index": "", "file_prefix": ""},
+    # # # -----------------------------------------------------------
+    # {"user_name": "水水..", "profile_name": "user937858", "file_prefix": "水水..a", "download_index": "305:"},
+    # {"user_name": "qishi", "profile_name": "qishi", "download_index": "264:", "file_prefix": ""},
+    # {"user_name": "LTDEND", "profile_name": "ltdend", "download_index": "236:", "file_prefix": ""},
+    # # # -----------------------------------------------------------
+    # # # R18的很少
+    # {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
-    # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
+    {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": "標識|ero sign|sign strip|hentai sign"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "時間停止", "query": "時間 停止|time stop|时间 停止|时停|時停"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "紳士枠", "query": "枠|透視|框|透视"},
@@ -178,49 +183,74 @@ def init_uc_session(user_agent: str):
     return driver
 
 # ------------------------------------------------------------------------------
-def selenium_api_get_json(driver, url: str, params: dict = None, headers: dict = None):
+import time
+import json
+from urllib.parse import urlencode
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+def selenium_api_get_json(
+    driver,
+    url: str,
+    params: dict = None,
+    headers: dict = None,
+    retries: int = 60,
+    retry_delay: list = [3, 5]
+):
     """
-    通过 undetected-chromedriver 访问 API 并获取 JSON：
+    通过 undetected-chromedriver 访问 API 并获取 JSON，失败则重试：
       1. Network.setExtraHTTPHeaders 注入 headers
       2. driver.get(full_url) 触发请求
       3. 等待 <body> 渲染，提取并解析 body.text
+    默认最多重试 60 次，每次重试间隔 retry_delay 秒。
     返回 Python 原生对象（dict 或 list）
     """
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-    from selenium.common.exceptions import TimeoutException
+    for attempt in range(1, retries + 1):
+        try:
+            # 确保同源上下文
+            if not (driver.current_url.startswith(IWARA_HOME) or
+                    driver.current_url.startswith(IWARA_API)):
+                driver.get(IWARA_HOME)
 
-    # 确保同源上下文
-    if not (driver.current_url.startswith(IWARA_HOME) or driver.current_url.startswith(IWARA_API)):
-        driver.get(IWARA_HOME)
+            # 拼接查询参数
+            full_url = url
+            if params:
+                full_url = f"{url}?{urlencode(params)}"
 
-    # 拼接查询参数
-    full_url = url
-    if params:
-        full_url = f"{url}?{urlencode(params)}"
+            # 1. 注入请求头
+            driver.execute_cdp_cmd("Network.enable", {})
+            if headers:
+                driver.execute_cdp_cmd(
+                    "Network.setExtraHTTPHeaders",
+                    {"headers": headers}
+                )
 
-    # 1. 注入请求头
-    driver.execute_cdp_cmd("Network.enable", {})
-    driver.execute_cdp_cmd("Network.setExtraHTTPHeaders", {"headers": headers})
+            # 2. 访问 API
+            driver.get(full_url)
 
-    # 2. 访问 API
-    driver.get(full_url)
+            # 3. 等待 body.text 以 { 开头
+            WebDriverWait(driver, TIMEOUT_SEC).until(
+                lambda d: d.find_element(By.TAG_NAME, "body")
+                              .text.strip()
+                              .startswith("{")
+            )
 
-    # 3. 等待 body.text 以 { 开头
-    try:
-        WebDriverWait(driver, TIMEOUT_SEC).until(
-            lambda d: d.find_element(By.TAG_NAME, "body").text.strip().startswith("{")
-        )
-    except TimeoutException:
-        raise RuntimeError(f"[Fetch JSON] 渲染超时: {full_url}")
+            # 提取并解析 JSON
+            raw = driver.find_element(By.TAG_NAME, "body").text
+            return json.loads(raw)
 
-    # 提取并解析 JSON
-    raw = driver.find_element(By.TAG_NAME, "body").text
-    try:
-        return json.loads(raw)
-    except Exception as e:
-        raise RuntimeError(f"[Fetch JSON] 解析失败: {e}\nRaw: {raw[:200]}")
+        except Exception as e:
+            print(f"重试次数：{attempt}/{retries}，报错信息: {e}")
+            # 最后一次重试失败则抛出
+            if attempt == retries:
+                raise RuntimeError(
+                    f"[Fetch JSON] 失败 {retries} 次，最后一次错误: {e}\n"
+                    f"URL: {full_url}"
+                )
+            # 否则等待并重试
+            time.sleep(random.uniform(*retry_delay))
 
 # ------------------------------------------------------------------------------
 def download_file_with_progress(url, filename, dir_username):
@@ -291,7 +321,7 @@ def download_file_with_progress(url, filename, dir_username):
             max_retries=60, max_download_seconds=TIMEOUT_SEC, max_filename_length=50
         )
         # 清理临时目录
-        shutil.rmtree(tmp, ignore_errors=True)
+        # shutil.rmtree(tmp, ignore_errors=True)
         return ok in ['下载成功', '下载成功，但文件大小未知']
 
 # ------------------------------------------------------------------------------
@@ -333,6 +363,7 @@ def main(driver, headers, user_name, file_prefix, download_index,
     if not query:
         page, count = 0, 1
         while page*32 <= count:
+            print("正在爬取第%d页" % (page+1))
             j = selenium_api_get_json(
                 driver, IWARA_API + "videos",
                 params={"user":user_id,"sort":"date","page":page},
@@ -351,6 +382,7 @@ def main(driver, headers, user_name, file_prefix, download_index,
             print("正在搜索关键词：%s" % kw)
             page, count = 0, 1
             while page*32 <= count:
+                print("正在爬取第%d页" % (page+1))
                 j = selenium_api_get_json(
                     driver, IWARA_API + "search",
                     params={"type":"video","query":kw,"page":page},
@@ -372,7 +404,7 @@ def main(driver, headers, user_name, file_prefix, download_index,
     video_list.sort(key=lambda x: x["create_time"])
     for idx, v in enumerate(video_list, 1):
         v["index"] = idx
-        print(f"{idx:3d} | {v['title']} | {v['create_time']}")
+        print(f"{idx:3d} {v['title']} {v['create_time']}")
 
     # 3. 筛选下载列表
     download_list = []
