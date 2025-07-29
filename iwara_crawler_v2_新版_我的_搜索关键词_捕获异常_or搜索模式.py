@@ -3,7 +3,7 @@
 """
 完整脚本：在原有 undetected-chromedriver + Selenium 框架上
 增加 Cookie 注入与全局请求头支持，并实现以下功能：
- 1. 每翻一页列表后随机 sleep 5～10 秒
+ 1. 每翻一页列表后随机 sleep 2～6 秒
  2. 如果目标文件或同名 .lnk 快捷方式已存在则跳过下载
  3. 若走搜索分支，存放文件的父级目录命名为 "[搜索]"+file_prefix
  4. 列表打印时，用单空格分隔标题与时间
@@ -26,7 +26,7 @@ import undetected_chromedriver as uc  # 隐藏 Selenium 自动化特征
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # 自定义下载函数，需要自行实现 download_file(...)
 from mymodule import download_file
@@ -232,7 +232,7 @@ def download_file_with_progress(
     headers: dict,
     max_retries: int = 60,
     retry_delay: tuple = (2, 5)
-) -> bool:
+):
     """
     单个视频下载，带重试机制（默认60次）：
       1. 启动 headless undetected-chromedriver 浏览器
@@ -281,11 +281,24 @@ def download_file_with_progress(
 
                 # 打开视频详情页
                 dl.get(url)
+                
+                #  等待加载完成
+                WebDriverWait(dl, TIMEOUT_SEC).until_not(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "div.loading__spinner"))
+                )
+                
+                # 检测是否是私人视频
+                try:
+                   private_video_el = dl.find_element(By.CSS_SELECTOR, ".container-fluid>div+div.text")
+                   if private_video_el.get_attribute("innerText") == "HTTP 403 - 私人视频":
+                       return "私人视频"
+                except NoSuchElementException:
+                    pass
+
+                # 从按钮父级下拉菜单中找 Source/540 链接
                 btn = WebDriverWait(dl, TIMEOUT_SEC).until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, ".downloadButton"))
                 )
-
-                # 从按钮父级下拉菜单中找 Source/540 链接
                 parent = btn.find_element(By.XPATH, "./../..")
                 links  = parent.find_elements(By.CSS_SELECTOR, ".dropdown__content li a")
                 target = None
@@ -330,7 +343,7 @@ def main(driver, headers, user_name, file_prefix, download_index,
     主流程：
       1. 清空旧错误日志
       2. 获取 user_id（profile 或 search）
-      3. 翻页拉视频列表，每页后随机 sleep 5～10 秒
+      3. 翻页拉视频列表，每页后随机 sleep 2～6 秒
       4. 排序、编号并打印（用单空格分隔标题与时间）
       5. 筛选下载列表
       6. 循环下载，跳过已存在文件或同名 .lnk  
@@ -378,8 +391,8 @@ def main(driver, headers, user_name, file_prefix, download_index,
                 url  = f"{IWARA_HOME}video/{itm['id']}/{slug}"
                 video_list.append({"url":url,"title":itm["title"],"ctime":ct})
             page += 1
-            # 新功能1：每翻一页随机 sleep 5～10 秒
-            time.sleep(random.uniform(5, 10))
+            # 新功能1：每翻一页随机 sleep 2～6 秒
+            time.sleep(random.uniform(2, 6))
     else:
         seen = set()
         for kw in query.split("|"):
@@ -404,8 +417,8 @@ def main(driver, headers, user_name, file_prefix, download_index,
                     url  = f"{IWARA_HOME}video/{itm['id']}/{slug}"
                     video_list.append({"url":url,"title":itm["title"],"ctime":ct})
                 page += 1
-                # 新功能1：每翻一页随机 sleep 5～10 秒
-                time.sleep(random.uniform(5, 10))
+                # 新功能1：每翻一页随机 sleep 2～6 秒
+                time.sleep(random.uniform(2, 6))
 
     # 4. 排序、编号并打印（用单空格分隔）
     video_list.sort(key=lambda x: x["ctime"])
@@ -448,9 +461,14 @@ def main(driver, headers, user_name, file_prefix, download_index,
 
         print(f"{idx:3d} 开始下载 → {dest}")
         ok = download_file_with_progress(v["url"], fn, save_dir, headers)
-        if ok:
+        if ok != "私人视频" and ok:
             print(f"{idx:3d} 下载成功")
             success.append(fn)
+        elif ok == "私人视频":
+            print(f"{idx:3d} 私人视频")
+            with open(ERROR_LOG, "a", encoding="utf-8") as ef:
+                ef.write(f"{fn} 私人视频，URL: {v['url']}\n")
+            errors.append(fn)
         else:
             print(f"{idx:3d} 下载失败")
             with open(ERROR_LOG, "a", encoding="utf-8") as ef:
