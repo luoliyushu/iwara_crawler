@@ -97,11 +97,11 @@ USER_INFO = [
     # {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
-    {"user_name": "", "profile_name": "", "download_index": "323:",
-        "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
+    # {"user_name": "", "profile_name": "", "download_index": "",
+    #     "file_prefix": "ハンド", "query": "ハンド|gentleman hand"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": "標識|ero sign|sign strip|hentai sign"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "時間停止", "query": "時間 停止|time stop|时间 停止|时停|時停"},
-    # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "紳士枠", "query": "枠|透視|框|透视"},
+    {"user_name": "", "profile_name": "", "download_index": "98:", "file_prefix": "紳士枠", "query": "枠|透視|框|透视"},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "DATEN_ROUTE", "query": "DATEN"},
 ]
 
@@ -270,94 +270,118 @@ def download_file_with_progress(
     token = headers.get("Authorization", "").split(" ", 1)[-1]
 
     for attempt in range(1, max_retries + 1):
-        print(f"[下载] 尝试第 {attempt}/{max_retries} 次")
+        try:
+            print(f"[下载] 尝试第 {attempt}/{max_retries} 次")
+            # 配置 headless Chrome
+            opts = uc.ChromeOptions()
+            opts.headless = True
+            opts.add_argument(f"--user-agent={ua}")
+            opts.add_argument("--lang=zh-CN")
+            opts.add_argument("--disable-blink-features=AutomationControlled")
+            if PROXIES.get("http"):
+                opts.add_argument(f"--proxy-server={PROXIES['http']}")
 
-        # 配置 headless Chrome
-        opts = uc.ChromeOptions()
-        opts.headless = True
-        opts.add_argument(f"--user-agent={ua}")
-        opts.add_argument("--lang=zh-CN")
-        opts.add_argument("--disable-blink-features=AutomationControlled")
-        if PROXIES.get("http"):
-            opts.add_argument(f"--proxy-server={PROXIES['http']}")
+            # 启动浏览器会话
+            dl = uc.Chrome(
+                options=opts, driver_executable_path="./chromedriver.exe")
+            # 注入全局请求头
+            dl.execute_cdp_cmd("Network.enable", {})
+            dl.execute_cdp_cmd("Network.setExtraHTTPHeaders", {
+                "headers": headers})
 
-        # 启动浏览器会话
-        with uc.Chrome(options=opts, driver_executable_path="./chromedriver.exe") as dl:
+            # 注入登录态到 localStorage
+            dl.get(IWARA_HOME)
+            dl.execute_script(
+                f"window.localStorage.setItem('token','{token}');")
+            dl.execute_script("window.localStorage.setItem('ecchi','1');")
+
+            # 打开视频详情页
+            dl.get(url)
+
+            #  等待加载完成
+            wait_for_video_load(dl, timeout=60)
+
+            # ------------------------------------------------------------------------------------
+            check_el = None
+            # 检测是否是私人视频
             try:
-                # 注入全局请求头
-                dl.execute_cdp_cmd("Network.enable", {})
-                dl.execute_cdp_cmd("Network.setExtraHTTPHeaders", {
-                                    "headers": headers})
+                check_el = dl.find_element(
+                    By.CSS_SELECTOR, ".container-fluid>div+div.text")
+                if check_el.get_attribute("innerText") == "HTTP 403 - 私人视频":
+                    return "私人视频"
+            except NoSuchElementException:
+                pass
+            # 检测是否是死的视频（就是一直显示“视频正在处理中”的链接）
+            try:
+                check_el = dl.find_element(
+                    By.CSS_SELECTOR, ".page-video__status > div.loading + div.text.mt-2.text--h2.text--bold + div.text.mt-2")
+                if check_el.get_attribute("innerText") == "你的视频正在处理，请稍后再看":
+                    return "死的视频"
+            except NoSuchElementException:
+                pass
+            # 检测是否是无法获取视频链接的视频
+            try:
+                check_el = dl.find_element(
+                    By.CSS_SELECTOR, ".page-video__status > div.icon + div.text.mt-2.text--h2.text--bold + div.text.mt-2")
+                if check_el.get_attribute("innerText") == "对不起！":
+                    return "无法获取"
+            except NoSuchElementException:
+                pass
+            # 检测是否是YouTube的视频
+            try:
+                check_el = dl.find_element(
+                    By.CSS_SELECTOR, "iframe.embedPlayer__youtube")
+                if check_el:
+                    return "YouTube视频"
+            except NoSuchElementException:
+                pass
+            # ------------------------------------------------------------------------------------
 
-                # 注入登录态到 localStorage
-                dl.get(IWARA_HOME)
-                dl.execute_script(
-                    f"window.localStorage.setItem('token','{token}');")
-                dl.execute_script("window.localStorage.setItem('ecchi','1');")
+            # 从按钮父级下拉菜单中找 Source/540 链接
+            btn = WebDriverWait(dl, TIMEOUT_SEC).until(
+                EC.element_to_be_clickable(
+                    (By.CSS_SELECTOR, ".downloadButton"))
+            )
+            parent = btn.find_element(By.XPATH, "./../..")
+            links = parent.find_elements(
+                By.CSS_SELECTOR, ".dropdown__content li a")
+            target = None
+            for a in links:
+                if a.get_attribute("innerHTML") in ("Source", "540"):
+                    target = a.get_attribute("href")
+                    break
+            if not target:
+                print("[下载] 未找到下载链接")
+                return False
 
-                # 打开视频详情页
-                dl.get(url)
+            # 调用外部下载方法
+            result = download_file(
+                target, filename, dir_username,
+                headers=headers,
+                max_retries=60,               # 内部 download_file 自行重试可以设置 1
+                max_download_seconds=TIMEOUT_SEC,
+                max_filename_length=50
+            )
+            # 判断返回值是否表示成功
+            if result in ["下载成功", "下载成功，但文件大小未知"]:
+                return True
+            else:
+                raise RuntimeError(f"download_file 返回异常：{result}")
 
-                #  等待加载完成
-                WebDriverWait(dl, TIMEOUT_SEC).until_not(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR, "div.loading__spinner"))
-                )
-
-                # 检测是否是私人视频
-                try:
-                    private_video_el = dl.find_element(
-                        By.CSS_SELECTOR, ".container-fluid>div+div.text")
-                    if private_video_el.get_attribute("innerText") == "HTTP 403 - 私人视频":
-                        return "私人视频"
-                except NoSuchElementException:
-                    pass
-
-                # 从按钮父级下拉菜单中找 Source/540 链接
-                btn = WebDriverWait(dl, TIMEOUT_SEC).until(
-                    EC.element_to_be_clickable(
-                        (By.CSS_SELECTOR, ".downloadButton"))
-                )
-                parent = btn.find_element(By.XPATH, "./../..")
-                links = parent.find_elements(
-                    By.CSS_SELECTOR, ".dropdown__content li a")
-                target = None
-                for a in links:
-                    if a.get_attribute("innerHTML") in ("Source", "540"):
-                        target = a.get_attribute("href")
-                        break
-                if not target:
-                    print("[下载] 未找到下载链接")
-                    return False
-
-                # 调用外部下载方法
-                result = download_file(
-                    target, filename, dir_username,
-                    headers=headers,
-                    max_retries=1,               # 内部 download_file 自行重试可以设置 1
-                    max_download_seconds=TIMEOUT_SEC,
-                    max_filename_length=50
-                )
-                # 判断返回值是否表示成功
-                if result in ["下载成功", "下载成功，但文件大小未知"]:
-                    return True
-                else:
-                    raise RuntimeError(f"download_file 返回异常：{result}")
-
-            except Exception as e:
-                print(f"[下载] 第{attempt}次失败：{e}")
-                if attempt == max_retries:
-                    print("[下载] 达到最大重试次数，放弃下载")
-                    return False
-                # 随机延迟后重试
-                sleep_sec = random.uniform(*retry_delay)
-                print(f"[下载] 等待 {sleep_sec:.1f}s 后重试…")
-                if dl:
-                    dl.quit()
-                time.sleep(sleep_sec)
-            finally:
-                if dl:
-                    dl.quit()
+        except Exception as e:
+            print(f"[下载] 第{attempt}次失败：{e}")
+            if attempt == max_retries:
+                print("[下载] 达到最大重试次数，放弃下载")
+                return False
+            # 随机延迟后重试
+            sleep_sec = random.uniform(*retry_delay)
+            print(f"[下载] 等待 {sleep_sec:.1f}s 后重试…")
+            if dl:
+                dl.quit()
+            time.sleep(sleep_sec)
+        finally:
+            if dl:
+                dl.quit()
     return False
 
 # --------------------------------------------------
@@ -489,13 +513,28 @@ def main(driver, headers, user_name, file_prefix, download_index,
 
         print(f"{idx:3d} 开始下载 → {dest}")
         ok = download_file_with_progress(v["url"], fn, save_dir, headers)
-        if ok != "私人视频" and ok:
+        if (ok not in ['私人视频', '死的视频', '无法获取', 'YouTube视频']) and ok:
             print(f"{idx:3d} 下载成功")
             success.append(fn)
         elif ok == "私人视频":
             print(f"{idx:3d} 私人视频")
             with open(ERROR_LOG, "a", encoding="utf-8") as ef:
                 ef.write(f"{fn} 私人视频，URL: {v['url']}\n")
+            errors.append(fn)
+        elif ok == "死的视频":
+            print(f"{idx:3d} 死的视频")
+            with open(ERROR_LOG, "a", encoding="utf-8") as ef:
+                ef.write(f"{fn} 死的视频: {v['url']}\n")
+            errors.append(fn)
+        elif ok == "无法获取":
+            print(f"{idx:3d} 无法获取")
+            with open(ERROR_LOG, "a", encoding="utf-8") as ef:
+                ef.write(f"{fn} 无法获取: {v['url']}\n")
+            errors.append(fn)
+        elif ok == "YouTube视频":
+            print(f"{idx:3d} YouTube视频")
+            with open(ERROR_LOG, "a", encoding="utf-8") as ef:
+                ef.write(f"{fn} YouTube视频: {v['url']}\n")
             errors.append(fn)
         else:
             print(f"{idx:3d} 下载失败")
@@ -513,6 +552,79 @@ def main(driver, headers, user_name, file_prefix, download_index,
         for x in errors:
             print("   ", x)
 
+# --------------------------------------------------
+
+
+def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
+    """
+    等待视频页面加载完成，满足以下任一条件即返回：
+    
+    条件1：div.loading__spinner 不可见或不存在  
+    条件2：.page-video__status > div.loading + div.text.mt-2.text--h2.text--bold + div.text.mt-2 可见  
+    条件3：.downloadButton 存在且可点击  
+    条件4：.page-video__status > div.icon + div.text.mt-2.text--h2.text--bold + div.text.mt-2 存在  
+    条件5：iframe.embedPlayer__youtube 存在，切入 iframe 后 #movie_player.ytp-exp-bottom-control-flexbox 出现  
+    """
+    wait = WebDriverWait(driver, timeout, poll_frequency)
+
+    def _load_condition(d):
+        # 条件1：spinner 不可见或不存在
+        try:
+            spinner = d.find_element(By.CSS_SELECTOR, "div.loading__spinner")
+            if not spinner.is_displayed():
+                return True
+        except NoSuchElementException:
+            return True
+
+        # 条件2：文本加载状态
+        status1 = (
+            ".page-video__status > div.loading + "
+            "div.text.mt-2.text--h2.text--bold + div.text.mt-2"
+        )
+        elems1 = d.find_elements(By.CSS_SELECTOR, status1)
+        if elems1 and elems1[0].is_displayed():
+            return True
+
+        # 条件4：icon 风格状态
+        status2 = (
+            ".page-video__status > div.icon + "
+            "div.text.mt-2.text--h2.text--bold + div.text.mt-2"
+        )
+        elems2 = d.find_elements(By.CSS_SELECTOR, status2)
+        if elems2 and elems2[0].is_displayed():
+            return True
+
+        # 条件3：下载按钮可点击
+        try:
+            dl_btn = d.find_element(By.CSS_SELECTOR, ".downloadButton")
+            if dl_btn.is_displayed() and dl_btn.is_enabled():
+                return True
+        except NoSuchElementException:
+            pass
+
+        # 条件5：YouTube iframe 内置播放器
+        try:
+            iframe = d.find_element(By.CSS_SELECTOR, "iframe.embedPlayer__youtube")
+        except NoSuchElementException:
+            return False
+
+        d.switch_to.frame(iframe)
+        try:
+            player = d.find_element(
+                By.CSS_SELECTOR,
+                "#movie_player.ytp-exp-bottom-control-flexbox"
+            )
+            return True
+        except NoSuchElementException:
+            return False
+        finally:
+            d.switch_to.default_content()
+
+    try:
+        wait.until(_load_condition)
+    except TimeoutException:
+        raise TimeoutException(f"等待视频加载超时 ({timeout}s)，请检查页面或选择器是否变化")
+
 
 # -------------------- 脚本入口 --------------------
 if __name__ == "__main__":
@@ -526,6 +638,7 @@ if __name__ == "__main__":
         }
 
         # 2. 初始化 undetected-chromedriver 会话并全局注入 headers
+        driver = None
         driver = init_uc_session(ua, headers)
 
         # 3. 批量执行任务
