@@ -42,3 +42,16 @@
 3. 在py脚本中设置用户和代理信息
 4. 蟒蛇 iwara_crawler.py
 5. 注意剩余磁盘空间并祝你玩得开心:)
+
+作者的sort
+- date
+- trending
+- popularity
+- views
+- likes
+
+搜索的sort
+- relevance #按相关性排序
+- date # 按最新排序
+- views # 按观看次数排序
+- likes #     按最喜欢排序
