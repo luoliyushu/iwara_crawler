@@ -33,11 +33,11 @@ from mymodule import download_file
 
 # ---------------- 用户批量配置 ----------------
 USER_INFO = [
-    {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
-    {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
-    {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
-    {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
-    {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
+    # {"user_name": "Forget Skyrim.", "profile_name": "forgetskyrim", "file_prefix": "Forget Skyrim", "download_index": ""},
+    # {"user_name": "S10", "profile_name": "s10", "download_index": "", "file_prefix": ""},
+    # {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
+    # {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
     {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
     {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
     {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
@@ -131,15 +131,14 @@ def get_token_and_cookie():
         # 随机 UA
         ua = UserAgent().random
         opts = uc.ChromeOptions()
-        opts.headless = False
+        # opts.headless = False
         opts.add_argument(f"--user-agent={ua}")
-        opts.add_argument("--disable-blink-features=AutomationControlled")
         if PROXIES.get("http"):
             opts.add_argument(f"--proxy-server={PROXIES['http']}")
 
         # 启动有界面浏览器扫码登录
         driver = uc.Chrome(
-            options=opts, driver_executable_path="./chromedriver.exe", version_main=143)
+            options=opts, driver_executable_path="./chromedriver.exe", version_main=150)
         driver.get(IWARA_HOME + "login")
         print("→ 请扫码登录 Iwara …")
 
@@ -184,12 +183,11 @@ def init_uc_session(user_agent: str, headers: dict):
     opts.add_argument("--headless=new")
     opts.add_argument(f"--user-agent={user_agent}")
     opts.add_argument("--lang=zh-CN")
-    opts.add_argument("--disable-blink-features=AutomationControlled")
     if PROXIES.get("http"):
         opts.add_argument(f"--proxy-server={PROXIES['http']}")
 
     driver = uc.Chrome(
-        options=opts, driver_executable_path="./chromedriver.exe", version_main=143)
+        options=opts, driver_executable_path="./chromedriver.exe", version_main=150)
 
     # 启用 Network 并注入全局 headers
     driver.execute_cdp_cmd("Network.enable", {})
@@ -280,13 +278,12 @@ def download_file_with_progress(
             opts.add_argument("--headless=new")
             opts.add_argument(f"--user-agent={ua}")
             opts.add_argument("--lang=zh-CN")
-            opts.add_argument("--disable-blink-features=AutomationControlled")
             if PROXIES.get("http"):
                 opts.add_argument(f"--proxy-server={PROXIES['http']}")
 
             # 启动浏览器会话
             dl = uc.Chrome(
-                options=opts, driver_executable_path="./chromedriver.exe", version_main=143)
+                options=opts, driver_executable_path="./chromedriver.exe", version_main=150)
             # 注入全局请求头
             dl.execute_cdp_cmd("Network.enable", {})
             dl.execute_cdp_cmd("Network.setExtraHTTPHeaders", {
@@ -407,8 +404,6 @@ def main(driver, headers, user_name, file_prefix, download_index,
       6. 循环下载，跳过已存在文件或同名 .lnk  
       7. 汇总输出
     """
-    # 1. 清空错误日志
-    open(ERROR_LOG, "w", encoding="utf-8").close()
 
     # 2. 获取 user_id
     if not query:
@@ -638,6 +633,9 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
 # -------------------- 脚本入口 --------------------
 if __name__ == "__main__":
     try:
+        # 0. 清空错误日志
+        open(ERROR_LOG, "w", encoding="utf-8").close()
+        
         # 1. 获取 token + cookie
         ua, token, cookie_header = get_token_and_cookie()
         headers = {
