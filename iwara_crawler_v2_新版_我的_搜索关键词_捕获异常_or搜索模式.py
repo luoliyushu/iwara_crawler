@@ -38,64 +38,109 @@ USER_INFO = [
     # {"user_name": "二两牛肉面JD", "profile_name": "user178752", "download_index": "", "file_prefix": ""},
     # {"user_name": "孤寡老音", "profile_name": "user1141804", "download_index": "", "file_prefix": ""},
     # {"user_name": "Cerodiers", "profile_name": "sanka", "file_prefix": "sanka", "download_index": ""},
-    {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
-    {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
-    {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
-    {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
-    {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
-    {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
-    {"user_name": "user15566", "profile_name": "user15566", "file_prefix": "sb5", "download_index": ""},
-    {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil", "download_index": "2:", "file_prefix": ""},
-    {"user_name": "fengyunmomo", "profile_name": "fengyunmomo", "download_index": "", "file_prefix": ""},
-    {"user_name": "txwy", "profile_name": "txwy", "download_index": "", "file_prefix": ""},
-    {"user_name": "Arx_MMD", "profile_name": "arxmmd", "download_index": "", "file_prefix": ""},
-    {"user_name": "akomni", "profile_name": "akomni", "download_index": "44:", "file_prefix": ""},
-    {"user_name": "千种咲夜子", "profile_name": "user1866311", "download_index": "", "file_prefix": ""},
-    {"user_name": "xiangweitudou", "profile_name": "user1936430", "download_index": "", "file_prefix": ""},
-    {"user_name": "PastaPaprika", "profile_name": "pastapaprika", "download_index": "", "file_prefix": ""},
-    {"user_name": "10yue", "profile_name": "10yue", "download_index": "", "file_prefix": ""},
-    {"user_name": "ダンリック", "profile_name": "user8160", "download_index": "", "file_prefix": ""},
-    {"user_name": "lovely416", "profile_name": "zehk416", "download_index": "", "file_prefix": ""},
-    {"user_name": "在下神奈有何贵干", "profile_name": "user1851714", "download_index": "", "file_prefix": ""},
-    {"user_name": "kemkem", "profile_name": "kemkem", "download_index": "", "file_prefix": ""},
-    {"user_name": "ReHaku", "profile_name": "rehaku", "download_index": "", "file_prefix": ""},
-    {"user_name": "iskanime", "profile_name": "iskanime", "download_index": "", "file_prefix": ""},
-    {"user_name": "tuiwannian", "profile_name": "user221116", "download_index": "700:", "file_prefix": ""},
-    {"user_name": "煜喵", "profile_name": "user1107866", "download_index": "60:", "file_prefix": ""},
-    {"user_name": "盐焗鸡", "profile_name": "598456851", "download_index": "", "file_prefix": ""},
-    {"user_name": "RuaaaD", "profile_name": "ruaaad", "download_index": "", "file_prefix": "好想摸鱼"},
-    {"user_name": "LikeHugeB", "profile_name": "user3207206", "download_index": "", "file_prefix": ""},
-    {"user_name": "天平キツネ", "profile_name": "extrafoxes", "download_index": "", "file_prefix": ""},
-    {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle", "download_index": "", "file_prefix": ""},
+    # {"user_name": "破砕姫", "profile_name": "user21650", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ViciNeko", "profile_name": "vicineko", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Juswe", "profile_name": "juswe", "download_index": "", "file_prefix": ""},
+    # {"user_name": "kisaki", "profile_name": "user1263963", "download_index": "", "file_prefix": ""},
+    # {"user_name": "Insect LOVE", "profile_name": "user1572781", "download_index": "", "file_prefix": ""},
+    # {"user_name": "ADLER", "profile_name": "user2124413", "download_index": "", "file_prefix": ""},
+    {"user_name": "user15566", "profile_name": "user15566",
+        "file_prefix": "sb5", "download_index": ""},
+    {"user_name": "mitsuboshiL", "profile_name": "mitsuboshil",
+        "download_index": "2:", "file_prefix": ""},
+    {"user_name": "fengyunmomo", "profile_name": "fengyunmomo",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "txwy", "profile_name": "txwy",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "Arx_MMD", "profile_name": "arxmmd",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "akomni", "profile_name": "akomni",
+        "download_index": "44:", "file_prefix": ""},
+    {"user_name": "千种咲夜子", "profile_name": "user1866311",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "xiangweitudou", "profile_name": "user1936430",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "PastaPaprika", "profile_name": "pastapaprika",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "10yue", "profile_name": "10yue",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "ダンリック", "profile_name": "user8160",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "lovely416", "profile_name": "zehk416",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "在下神奈有何贵干", "profile_name": "user1851714",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "kemkem", "profile_name": "kemkem",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "ReHaku", "profile_name": "rehaku",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "iskanime", "profile_name": "iskanime",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "tuiwannian", "profile_name": "user221116",
+        "download_index": "700:", "file_prefix": ""},
+    {"user_name": "煜喵", "profile_name": "user1107866",
+        "download_index": "60:", "file_prefix": ""},
+    {"user_name": "盐焗鸡", "profile_name": "598456851",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "RuaaaD", "profile_name": "ruaaad",
+        "download_index": "", "file_prefix": "好想摸鱼"},
+    {"user_name": "LikeHugeB", "profile_name": "user3207206",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "天平キツネ", "profile_name": "extrafoxes",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "Cloudsea Castle", "profile_name": "cloudseacastle",
+        "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # 整活（时间停止、催眠、绅士之手）
-    {"user_name": "QNR", "profile_name": "qnr", "download_index": "30:", "file_prefix": ""},
-    {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621", "download_index": "", "file_prefix": ""},
-    {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu", "download_index": "", "file_prefix": ""},
-    {"user_name": "noneferoero", "profile_name": "noneferoero", "download_index": "", "file_prefix": ""},
-    {"user_name": "yafrmmd", "profile_name": "yafrmmd", "download_index": "", "file_prefix": ""},
-    {"user_name": "sodeno19", "profile_name": "sodeno19", "download_index": "", "file_prefix": ""},
-    {"user_name": "Garnet2020", "profile_name": "garnet2020", "download_index": "", "file_prefix": ""},
-    {"user_name": "xiaodidi09", "profile_name": "xiaodidi09", "download_index": "", "file_prefix": ""},
-    {"user_name": "mox", "profile_name": "mox", "download_index": "", "file_prefix": ""},
-    {"user_name": "Arisananades", "profile_name": "Arisananades", "download_index": "", "file_prefix": ""},
-    {"user_name": "kuronekorin", "profile_name": "kuronekorin", "download_index": "", "file_prefix": ""},
-    {"user_name": "curvylonix", "profile_name": "curvylonix", "download_index": "", "file_prefix": ""},
-    {"user_name": "sola", "profile_name": "user2501342", "download_index": "", "file_prefix": ""},
-    {"user_name": "yerrrg", "profile_name": "gerrry", "download_index": "", "file_prefix": ""},
+    {"user_name": "QNR", "profile_name": "qnr",
+        "download_index": "30:", "file_prefix": ""},
+    {"user_name": "Unlimited EcchiMMD Works", "profile_name": "11556621",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "yokujitsu@ヨクジツ", "profile_name": "yokujitsu",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "noneferoero", "profile_name": "noneferoero",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "yafrmmd", "profile_name": "yafrmmd",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "sodeno19", "profile_name": "sodeno19",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "Garnet2020", "profile_name": "garnet2020",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "xiaodidi09", "profile_name": "xiaodidi09",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "mox", "profile_name": "mox",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "Arisananades", "profile_name": "Arisananades",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "kuronekorin", "profile_name": "kuronekorin",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "curvylonix", "profile_name": "curvylonix",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "sola", "profile_name": "user2501342",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "yerrrg", "profile_name": "gerrry",
+        "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # 淫词艳曲
-    {"user_name": "琉璃狐", "profile_name": "user724850", "download_index": "", "file_prefix": ""},
-    {"user_name": "YZLZ", "profile_name": "yzlzhhzwty", "download_index": "", "file_prefix": ""},
-    {"user_name": "粉红色猫猫头", "profile_name": "user205029", "download_index": "", "file_prefix": ""},
-    {"user_name": "整夜下雪", "profile_name": "user340036", "download_index": "", "file_prefix": ""},
+    {"user_name": "琉璃狐", "profile_name": "user724850",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "YZLZ", "profile_name": "yzlzhhzwty",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "粉红色猫猫头", "profile_name": "user205029",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "整夜下雪", "profile_name": "user340036",
+        "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
-    {"user_name": "水水..", "profile_name": "user937858", "file_prefix": "水水..a", "download_index": "305:"},
-    {"user_name": "qishi", "profile_name": "qishi", "download_index": "", "file_prefix": ""},
-    {"user_name": "LTDEND", "profile_name": "ltdend", "download_index": "", "file_prefix": ""},
+    {"user_name": "水水..", "profile_name": "user937858",
+        "file_prefix": "水水..a", "download_index": "305:"},
+    {"user_name": "qishi", "profile_name": "qishi",
+        "download_index": "", "file_prefix": ""},
+    {"user_name": "LTDEND", "profile_name": "ltdend",
+        "download_index": "", "file_prefix": ""},
     # # -----------------------------------------------------------
     # # R18的很少
-    {"user_name": "骑着牛儿追织女", "profile_name": "user1528210", "download_index": "", "file_prefix": ""},
+    {"user_name": "骑着牛儿追织女", "profile_name": "user1528210",
+        "download_index": "", "file_prefix": ""},
     # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
     # {"user_name": "", "profile_name": "", "download_index": "",
@@ -299,7 +344,7 @@ def download_file_with_progress(
             dl.get(url)
 
             #  等待加载完成
-            wait_for_video_load(dl, timeout=60)
+            wait_for_video_load(dl, timeout=60, poll_frequency=2)
 
             # ------------------------------------------------------------------------------------
             check_el = None
@@ -365,6 +410,8 @@ def download_file_with_progress(
             # 判断返回值是否表示成功
             if result in ["下载成功", "下载成功，但文件大小未知"]:
                 return True
+            elif result == "下载失败，文件不存在":
+                return "文件不存在"
             else:
                 raise RuntimeError(f"download_file 返回异常：{result}")
 
@@ -456,7 +503,8 @@ def main(driver, headers, user_name, file_prefix, download_index,
                 print(f">> 抓取第 {page+1} 页搜索结果…")
                 j = selenium_api_get_json(
                     driver, IWARA_API + "search",
-                    {"type": "videos", "query": kw, "page": page, "sort": query_sort},
+                    {"type": "videos", "query": kw,
+                        "page": page, "sort": query_sort},
                     headers
                 )
                 total = j.get("count", 0)
@@ -539,6 +587,11 @@ def main(driver, headers, user_name, file_prefix, download_index,
             with open(ERROR_LOG, "a", encoding="utf-8") as ef:
                 ef.write(f"{fn} YouTube视频: {v['url']}\n")
             errors.append(fn)
+        elif ok == "文件不存在":
+            print(f"{idx:3d} 文件不存在")
+            with open(ERROR_LOG, "a", encoding="utf-8") as ef:
+                ef.write(f"{fn} 文件不存在: {v['url']}\n")
+            errors.append(fn)
         else:
             print(f"{idx:3d} 下载失败")
             with open(ERROR_LOG, "a", encoding="utf-8") as ef:
@@ -571,14 +624,6 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
     wait = WebDriverWait(driver, timeout, poll_frequency)
 
     def _load_condition(d):
-        # 条件1：spinner 不可见或不存在
-        try:
-            spinner = d.find_element(By.CSS_SELECTOR, "div.loading__spinner")
-            if not spinner.is_displayed():
-                return True
-        except NoSuchElementException:
-            return True
-
         # 条件2：文本加载状态
         status1 = (
             ".page-video__status > div.loading + "
@@ -625,6 +670,11 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
             d.switch_to.default_content()
 
     try:
+        # 条件1：spinner 不可见或不存在，执行接下来的代码
+        WebDriverWait(driver, timeout, poll_frequency).until_not(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.loading__spinner")))
+        print("[加载] 加载动画结束")
+        # 自定义等待情况
         wait.until(_load_condition)
     except TimeoutException:
         raise TimeoutException(f"等待视频加载超时 ({timeout}s)，请检查页面或选择器是否变化")
@@ -635,7 +685,7 @@ if __name__ == "__main__":
     try:
         # 0. 清空错误日志
         open(ERROR_LOG, "w", encoding="utf-8").close()
-        
+
         # 1. 获取 token + cookie
         ua, token, cookie_header = get_token_and_cookie()
         headers = {
