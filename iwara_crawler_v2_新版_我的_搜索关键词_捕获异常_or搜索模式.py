@@ -76,14 +76,14 @@ USER_INFO = [
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "iskanime", "profile_name": "iskanime",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "tuiwannian", "profile_name": "user221116",
-        "download_index": "700:", "file_prefix": ""},
+    # {"user_name": "tuiwannian", "profile_name": "user221116",
+    #     "download_index": "700:", "file_prefix": ""},
     # {"user_name": "煜喵", "profile_name": "user1107866",
     #     "download_index": "60:", "file_prefix": ""},
     # {"user_name": "盐焗鸡", "profile_name": "598456851",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "RuaaaD", "profile_name": "ruaaad",
-        "download_index": "", "file_prefix": "好想摸鱼"},
+    # {"user_name": "RuaaaD", "profile_name": "ruaaad",
+    #     "download_index": "", "file_prefix": "好想摸鱼"},
     # {"user_name": "LikeHugeB", "profile_name": "user3207206",
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "天平キツネ", "profile_name": "extrafoxes",
@@ -104,21 +104,25 @@ USER_INFO = [
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "sodeno19", "profile_name": "sodeno19",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "Garnet2020", "profile_name": "garnet2020",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "Garnet2020", "profile_name": "garnet2020",
+    #     "download_index": "", "file_prefix": ""},
     # {"user_name": "xiaodidi09", "profile_name": "xiaodidi09",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "mox", "profile_name": "mox",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "mox", "profile_name": "mox",
+    #     "download_index": "", "file_prefix": ""},
     # {"user_name": "Arisananades", "profile_name": "Arisananades",
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "kuronekorin", "profile_name": "kuronekorin",
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "curvylonix", "profile_name": "curvylonix",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "sola", "profile_name": "user2501342",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "sola", "profile_name": "user2501342",
+    #     "download_index": "", "file_prefix": ""},
     # {"user_name": "yerrrg", "profile_name": "gerrry",
+    #     "download_index": "", "file_prefix": ""},
+    # {"user_name": "小小白MMD", "profile_name": "wangbaduzio",
+    #     "download_index": "", "file_prefix": ""},
+    # {"user_name": "芷菡酱", "profile_name": "zihanjiang",
     #     "download_index": "", "file_prefix": ""},
     # # # -----------------------------------------------------------
     # # # 淫词艳曲
@@ -126,25 +130,25 @@ USER_INFO = [
     #     "download_index": "", "file_prefix": ""},
     # {"user_name": "YZLZ", "profile_name": "yzlzhhzwty",
     #     "download_index": "", "file_prefix": ""},
-    {"user_name": "粉红色猫猫头", "profile_name": "user205029",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "粉红色猫猫头", "profile_name": "user205029",
+    #     "download_index": "", "file_prefix": ""},
     # {"user_name": "整夜下雪", "profile_name": "user340036",
     #     "download_index": "", "file_prefix": ""},
     # # # -----------------------------------------------------------
-    {"user_name": "水水..", "profile_name": "user937858",
-        "file_prefix": "水水..a", "download_index": "305:"},
-    {"user_name": "qishi", "profile_name": "qishi",
-        "download_index": "", "file_prefix": ""},
-    {"user_name": "LTDEND", "profile_name": "ltdend",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "水水..", "profile_name": "user937858",
+    #     "file_prefix": "水水..a", "download_index": ""},
+    # {"user_name": "qishi", "profile_name": "qishi",
+    #     "download_index": "", "file_prefix": ""},
+    # {"user_name": "LTDEND", "profile_name": "ltdend",
+    #     "download_index": "", "file_prefix": ""},
     # # # -----------------------------------------------------------
     # # # R18的很少
-    {"user_name": "骑着牛儿追织女", "profile_name": "user1528210",
-        "download_index": "", "file_prefix": ""},
+    # {"user_name": "骑着牛儿追织女", "profile_name": "user1528210",
+    #     "download_index": "", "file_prefix": ""},
     # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
-    # {"user_name": "", "profile_name": "", "download_index": "",
-    #     "file_prefix": "ハンド", "query": '"ハンド"|gentleman hand|{tags: [gentleman_hand, gentleman_hands]}'},
+    {"user_name": "", "profile_name": "", "download_index": "",
+        "file_prefix": "新_ハンド", "query": '{tags: [gentleman_hand, gentleman_hands]}|"ハンド"|gentleman\'s hand|gentleman hand'},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": '標識|erotic sign|sign strip|hentai sign|{tags: [erotic_sign, gentleman_sign]}'},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "時間停止", "query": '時間 停止|time stop|时间 停止|时停|時停|{tags: [timestop, time_stop]}'},
     # {"user_name": "", "profile_name": "", "download_index": "98:", "file_prefix": "紳士枠", "query": '紳士枠|透視|绅士框|透视|{tags: [gentleman_frame]}'},  # 98: 从第98个开始下载，之前的跳过
@@ -619,7 +623,8 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
     条件2：.page-video__status > div.loading + div.text.mt-2.text--h2.text--bold + div.text.mt-2 可见  
     条件3：.downloadButton 存在且可点击  
     条件4：.page-video__status > div.icon + div.text.mt-2.text--h2.text--bold + div.text.mt-2 存在  
-    条件5：iframe.embedPlayer__youtube 存在，切入 iframe 后 #movie_player.ytp-exp-bottom-control-flexbox 出现  
+    条件5：iframe.embedPlayer__youtube 存在，切入 iframe 后 #movie_player.ytp-exp-bottom-control-flexbox 出现 
+    条件6：.container-fluid>div+div.text 可见 
     """
     wait = WebDriverWait(driver, timeout, poll_frequency)
 
@@ -640,6 +645,11 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
         )
         elems2 = d.find_elements(By.CSS_SELECTOR, status2)
         if elems2 and elems2[0].is_displayed():
+            return True
+        
+        # 条件6：私人视频 可见
+        elems3 = d.find_elements(By.CSS_SELECTOR, ".container-fluid>div+div.text")
+        if elems3 and elems3[0].is_displayed():
             return True
 
         # 条件3：下载按钮可点击
