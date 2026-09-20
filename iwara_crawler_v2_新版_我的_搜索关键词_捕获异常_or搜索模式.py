@@ -147,7 +147,7 @@ USER_INFO = [
     #     "download_index": "", "file_prefix": ""},
     # -----------------------------------------------------------
     # # # 搜索，使用|代表or搜索模式
-    {"user_name": "", "profile_name": "", "download_index": "",
+    {"user_name": "", "profile_name": "", "download_index": "601:",
         "file_prefix": "新_ハンド", "query": '{tags: [gentleman_hand, gentleman_hands]}|"ハンド"|gentleman\'s hand|gentleman hand'},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "標識", "query": '標識|erotic sign|sign strip|hentai sign|{tags: [erotic_sign, gentleman_sign]}'},
     # {"user_name": "", "profile_name": "", "download_index": "", "file_prefix": "時間停止", "query": '時間 停止|time stop|时间 停止|时停|時停|{tags: [timestop, time_stop]}'},
@@ -680,9 +680,9 @@ def wait_for_video_load(driver, timeout=30, poll_frequency=0.5):
             d.switch_to.default_content()
 
     try:
-        # 条件1：spinner 不可见或不存在，执行接下来的代码
+        # 条件1：初始加载 不可见或不存在，执行接下来的代码
         WebDriverWait(driver, timeout, poll_frequency).until_not(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.loading__spinner")))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div.userProvider.userProvider--loading div.loading__spinner")))
         print("[加载] 加载动画结束")
         # 自定义等待情况
         wait.until(_load_condition)
